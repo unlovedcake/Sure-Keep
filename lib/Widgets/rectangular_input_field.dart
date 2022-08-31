@@ -8,7 +8,7 @@ import 'neumorphic_text_field_container.dart';
 class RectangularInputField extends StatelessWidget {
 
   final String hintText;
-  final IconData icon;
+  final Icon icon;
   final bool obscureText;
   final TextInputType textInputType;
   final TextEditingController controller;
@@ -33,7 +33,7 @@ class RectangularInputField extends StatelessWidget {
             color: AppColors.black.withOpacity(0.7),
             fontSize: 18,
           ),
-          prefixIcon: Icon(icon,color: AppColors.black.withOpacity(0.7),size: 20,),
+          prefixIcon: icon,
           border: InputBorder.none,
         ),
       ),

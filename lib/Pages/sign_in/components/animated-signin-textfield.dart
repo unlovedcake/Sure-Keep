@@ -1,14 +1,13 @@
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:sure_keep/Pages/sign_in/components/social.dart';
-
+import 'package:sure_keep/Pages/sign_up/signup-screen.dart';
+import 'package:sure_keep/Router/navigate-route.dart';
 import '../../../All-Constants/size_constants.dart';
-import '../../../Provider/auth-provider.dart';
 import '../../../Widgets/account_check.dart';
 import '../../../Widgets/animation-item-builder.dart';
 import '../../../Widgets/rectangular_button.dart';
-import '../../../Widgets/rectangular_input_field.dart';
+import '../../sign_up/phone-auth_screen.dart';
 import 'head_text.dart';
 
 
@@ -29,14 +28,13 @@ class _AnimateSignInFieldsState extends State<AnimateSignInFields> {
 
     icon = [
 
-
       HeadText(),
 
+      RectangularButton(text: 'Login', press: (){
+        NavigateRoute.gotoPage(context, SignUpScreen());
+      }),
 
-
-
-
-
+     const Social()
 
     ];
 

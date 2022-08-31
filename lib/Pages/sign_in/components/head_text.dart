@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../All-Constants/size_constants.dart';
 
 
 
@@ -13,11 +12,10 @@ class HeadText extends StatelessWidget {
 
     return SingleChildScrollView(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
+
         children: [
           SizedBox(height: size.height * 0.05),
-          Text('SUREKEEP',style: TextStyle(
+          const Text('SUREKEEP',style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
           ),),

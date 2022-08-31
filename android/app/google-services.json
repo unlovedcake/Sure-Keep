@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "977817104860",
+    "project_id": "sure-keep",
+    "storage_bucket": "sure-keep.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:977817104860:android:d20d78c8152b186c635f19",
+        "android_client_info": {
+          "package_name": "com.surekeep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "977817104860-mn54qg5l15e7okg7bq905m7nibhn0r9p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.surekeep",
+            "certificate_hash": "bddcb183d98e15cd23159bb05d0bafd81253592f"
+          }
+        },
+        {
+          "client_id": "977817104860-ge9cd0rvvafhdkagkba8ttsjigsv1r7c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI3eASYHzhm-rDjbetGvATSuleN2fo88s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "977817104860-ge9cd0rvvafhdkagkba8ttsjigsv1r7c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

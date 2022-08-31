@@ -19,7 +19,7 @@ class AppColors {
   static const  kAccentColor = Color(0xffFCAAAB);
   static const  kAccentColorVariant = Color(0xffF7A3A2);
   static const  kUnreadChatBG = Color(0xffEE1D1D);
-  static const  logoColor = Color(0xff43a0a7);
+  static const  logoColor = Color(0xff2596be);
   static const Color black = Colors.black;
 
 

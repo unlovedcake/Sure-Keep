@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sure_keep/Pages/sign_up/phone-auth_screen.dart';
 import '../../../All-Constants/size_constants.dart';
 import '../../../Router/navigate-route.dart';
 import '../../../Widgets/account_check.dart';
-import '../sigin_screen.dart';
+import '../../sign_in/sigin_screen.dart';
+import '../phone-auth_screen.dart';
 
 class Social extends StatelessWidget {
   const Social({Key? key}) : super(key: key);
@@ -13,32 +13,27 @@ class Social extends StatelessWidget {
     return Column(
       children: [
 
-        const SizedBox(
-          height:Sizes.appPadding,
+        SizedBox(
+          height: Sizes.appPadding,
         ),
         AccountCheck(
-          login: false,
+          login: true,
           press: () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (context) {
-            //       return const SignUpScreen();
-            //     },
-            //   ),
-            // );
-
-            NavigateRoute.routePageAnimation(
-                context, animateRouteSignUpScreen());
+            Navigator.push(
+              context,
+                NavigateRoute.routePageAnimation(
+                    context, animateRouteSignInScreen())
+            );
           },
         ),
       ],
     );
   }
-  Route animateRouteSignUpScreen() {
+
+  Route animateRouteSignInScreen() {
     return PageRouteBuilder(
       transitionDuration: const Duration(milliseconds: 1000),
-      pageBuilder: (context, animation, secondaryAnimation) => const PhoneAuthScreen(),
+      pageBuilder: (context, animation, secondaryAnimation) => const SignInScreen(),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
