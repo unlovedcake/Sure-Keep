@@ -3,14 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sure_keep/Pages/home/home-screen.dart';
+import 'package:sure_keep/Pages/sign_in/login.dart';
 import 'package:sure_keep/Pages/sign_up/components/otp-verification-code.dart';
 import 'package:sure_keep/Pages/sign_up/signup-screen.dart';
 
 import '../Models/user-model.dart';
+import '../Pages/sign_in/sigin_screen.dart';
 import '../Router/navigate-route.dart';
 import '../Widgets/progress-dialog.dart';
 
@@ -22,6 +25,12 @@ class AuthProvider extends ChangeNotifier {
   String? userEmail;
   String verificationID = "";
   String _phoneNumber = "";
+  String _otpCode = "";
+  String genderValue = "Man";
+
+  bool isGenderMan = false;
+
+  bool isGenderWoman = false;
 
   bool isAppActive = true;
 
@@ -32,13 +41,32 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  setGenderMan(bool gen) {
+    isGenderMan = gen;
+    notifyListeners();
+  }
+
+  setGenderWoman(bool gen) {
+    isGenderWoman = gen;
+    notifyListeners();
+  }
+
+  setGenderValue(String gen) {
+    genderValue = gen;
+    notifyListeners();
+  }
+
+  String get getGenderValue => genderValue;
+  bool get getGenderMan => isGenderMan;
+  bool get getGenderWoman => isGenderWoman;
 
   String get getPhoneNumber => _phoneNumber;
   String get getVerificationID => verificationID;
+  String get getOtpCode => _otpCode;
 
   String get getUserEmail => userEmail!;
 
-  String? _otpCode;
+
 
   Future<void> loginWithPhone(String phoneNumber, BuildContext context) async {
     showDialog(
@@ -56,54 +84,71 @@ class AuthProvider extends ChangeNotifier {
         verificationCompleted: (PhoneAuthCredential credential) async {
 
 
-          await _auth.signInWithCredential(credential).whenComplete(() async{
+          await _auth.signInWithCredential(credential).then((value){
 
              _otpCode = credential.smsCode!;
+
+             Navigator.pop(context);
+             NavigateRoute.gotoPage(context, const OTPVerificationCode());
 
             Fluttertoast.showToast(
               msg: 'OTP sent successfully.',
               timeInSecForIosWeb: 3,
               gravity: ToastGravity.CENTER_RIGHT,
             );
-
-            print("Code Sent Successfully");
+            notifyListeners();
+            print("Code Sent Successfully $_otpCode");
           });
         },
         verificationFailed: (FirebaseAuthException e) {
 
-          if (e.code == 'invalid-phone-number') {
-            Fluttertoast.showToast(
-              timeInSecForIosWeb: 3,
-              msg: 'The phone number is invalid.',
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.CENTER_RIGHT,
-            );
-          }else {
-            Fluttertoast.showToast(
-              timeInSecForIosWeb: 3,
-              msg: e.message.toString(),
-              toastLength: Toast.LENGTH_LONG,
-              gravity: ToastGravity.CENTER_RIGHT,
-            );
-          }
+          Fluttertoast.showToast(
+            timeInSecForIosWeb: 3,
+            msg: "Invalid-phone-number",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER_RIGHT,
+          );
+
+          // if (e.code == 'invalid-phone-number') {
+          //   Fluttertoast.showToast(
+          //     timeInSecForIosWeb: 3,
+          //     msg: 'The phone number is invalid.',
+          //     toastLength: Toast.LENGTH_LONG,
+          //     gravity: ToastGravity.CENTER_RIGHT,
+          //   );
+          // }else {
+          //
+          //   Fluttertoast.showToast(
+          //     timeInSecForIosWeb: 3,
+          //     msg: e.message.toString(),
+          //     toastLength: Toast.LENGTH_LONG,
+          //     gravity: ToastGravity.CENTER_RIGHT,
+          //   );
+          // }
           Navigator.pop(context);
           print(e.message);
           print("EXPIRED");
         },
         codeSent: (String verificationId, int? resendToken) {
-          Navigator.pop(context);
-          NavigateRoute.gotoPage(context, const OTPVerificationCode());
+
+
           verificationID = verificationId;
           _phoneNumber = phoneNumber;
-          notifyListeners();
+
 
           print("OTP Sent Successfully");
         },
-        codeAutoRetrievalTimeout: (String verificationId) {},
-        timeout: const Duration(seconds: 5),
+        codeAutoRetrievalTimeout: (String verificationId) {
+
+
+          print("TimeOut $verificationId");
+            Navigator.pop(context);
+        },
+        timeout: const Duration(seconds: 30),
       );
+      notifyListeners();
     } catch (e) {
-      Navigator.pop(context);
+
       print(e.toString());
     }
   }
@@ -127,21 +172,8 @@ class AuthProvider extends ChangeNotifier {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
           verificationId: verificationId, smsCode: otpCode);
 
-      if( _otpCode == otpCode){
+      if( _otpCode != otpCode){
 
-        NavigateRoute.gotoPage(
-            context, HomeScreen());
-
-        Fluttertoast.showToast(
-          msg: "You are logged in successfully",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
-      }else{
         Fluttertoast.showToast(
           msg: "Invalid OTP Code",
           toastLength: Toast.LENGTH_SHORT,
@@ -151,34 +183,38 @@ class AuthProvider extends ChangeNotifier {
           textColor: Colors.white,
           fontSize: 16.0,
         );
+        Navigator.pop(context);
+      }else{
+
+
+
+        Fluttertoast.showToast(
+          msg: "Your account is successfully verified.",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        Navigator.pop(context);
+        NavigateRoute.gotoPage(
+            context, const SignUpScreen());
       }
 
       await _auth.signInWithCredential(credential).then(
             (val) {
-              Navigator.pop(context);
-              NavigateRoute.gotoPage(context, const SignUpScreen());
 
-
-              Fluttertoast.showToast(
-                msg: 'Your account is successfully verified.',
-                timeInSecForIosWeb: 3,
-                gravity: ToastGravity.CENTER_RIGHT,
-              );
         },
       );
     }catch(e){
-      Navigator.pop(context);
-      Fluttertoast.showToast(
-        msg: 'Invalid OTP Code',
-        timeInSecForIosWeb: 3,
-        gravity: ToastGravity.CENTER_RIGHT,
-      );
       print(e.toString());
     }
 
 
 
   }
+
+
 
   signUp(String password, UserModel? userModel, BuildContext context) async {
     try {
@@ -192,9 +228,11 @@ class AuthProvider extends ChangeNotifier {
           });
 
       UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-              email: userModel!.email.toString(), password: password);
+      await _auth.createUserWithEmailAndPassword(
+          email: userModel!.email.toString(), password: password);
       user = userCredential.user;
+
+
 
       await user!.updateDisplayName(userModel.firstName);
       await user!.updatePhotoURL(userModel.imageUrl);
@@ -202,38 +240,59 @@ class AuthProvider extends ChangeNotifier {
       user = _auth.currentUser;
 
       userModel.docID = user!.uid;
+      userModel.phoneNumber = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
 
-      await FirebaseFirestore.instance
-          .collection("table-user")
-          .doc(user!.uid)
-          .set(userModel.toMap())
-          .then((uid) async {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString('email', userModel.email.toString());
+      final QuerySnapshot result = await FirebaseFirestore.instance
+          .collection('table-user')
+          .where('docID', isEqualTo: user!.uid)
+          .get();
+      final List<DocumentSnapshot> document = result.docs;
 
-        userEmail = userModel.email.toString();
+      if (document.isEmpty) {
+        await FirebaseFirestore.instance
+            .collection("table-user")
+            .doc(user!.uid)
+            .set(userModel.toMap())
+            .then((uid) async {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setString('email', userModel.email.toString());
 
-        //NavigateRoute.gotoPage(context, Home());
+          userEmail = userModel.email.toString();
 
-        QuickAlert.show(
+          DocumentSnapshot documentSnapshot = document[0];
+          UserModel userData =  UserModel.fromMap(documentSnapshot);
+
+
+          NavigateRoute.gotoPage(context,  Home(userData: userData));
+
+
+
+
+          QuickAlert.show(
 
             //customAsset: 'assets/images/form-header-img.png',
-            context: context,
-            autoCloseDuration: const Duration(seconds: 3),
-            type: QuickAlertType.success,
-            text: 'Welcome, You are now logged in !!!',
-            onConfirmBtnTap: () {
-              Navigator.of(context).pop();
-            });
+              context: context,
+              autoCloseDuration: const Duration(seconds: 3),
+              type: QuickAlertType.success,
+              text: 'Welcome, You are now logged in !!!',
+              onConfirmBtnTap: (){
+                Navigator.of(context).pop();
+              }
+          );
 
-        // Fluttertoast.showToast(
-        //   msg: "Account created successfully :) ",
-        //   timeInSecForIosWeb: 3,
-        //   gravity: ToastGravity.CENTER_RIGHT,
-        // );
 
-        notifyListeners();
-      });
+
+
+          // Fluttertoast.showToast(
+          //   msg: "Account created successfully :) ",
+          //   timeInSecForIosWeb: 3,
+          //   gravity: ToastGravity.CENTER_RIGHT,
+          // );
+
+          notifyListeners();
+        });
+      }
+
     } on FirebaseAuthException catch (error) {
       Navigator.of(context).pop();
       switch (error.code) {
@@ -263,6 +322,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+
   signIn(String email, String password, BuildContext context) async {
     try {
       showDialog(
@@ -276,30 +336,49 @@ class AuthProvider extends ChangeNotifier {
 
       await _auth
           .signInWithEmailAndPassword(email: email, password: password)
-          .then((uid) async {
-        User? usr = FirebaseAuth.instance.currentUser;
+          .then((id) async {
 
-        //Navigator.of(context).pop();
-        //NavigateRoute.gotoPage(context, const Home());
+        final QuerySnapshot result = await FirebaseFirestore.instance
+            .collection('table-user')
+            .where('email', isEqualTo: email)
+            .get();
+        final List<DocumentSnapshot> document = result.docs;
+
+        if(document.isNotEmpty){
+          DocumentSnapshot documentSnapshot = document[0];
+          UserModel userData =  UserModel.fromMap(documentSnapshot);
+
+          NavigateRoute.gotoPage(context, Home( userData: userData));
+        }
+
+
+
 
         QuickAlert.show(
 
-            //customAsset: 'assets/images/form-header-img.png',
+          //customAsset: 'assets/images/form-header-img.png',
             context: context,
             autoCloseDuration: const Duration(seconds: 3),
             type: QuickAlertType.success,
             text: 'Welcome, You are now logged in !!!',
-            onConfirmBtnTap: () {
+            onConfirmBtnTap: (){
               Navigator.of(context).pop();
-            });
+            }
+        );
 
         // Fluttertoast.showToast(
         //   msg: "You are now logged in... :) ",
         //   gravity: ToastGravity.CENTER_RIGHT,
         // );
 
+
+
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('email', email);
+
+
+
+
       });
 
       notifyListeners();
@@ -344,4 +423,13 @@ class AuthProvider extends ChangeNotifier {
       print(error.code);
     }
   }
+
+  // the logout function
+  static Future<void> logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (context) => const SignInScreen()));
+  }
+
 }

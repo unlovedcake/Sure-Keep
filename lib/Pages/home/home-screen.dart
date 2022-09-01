@@ -1,15 +1,167 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:sure_keep/All-Constants/all_constants.dart';
+import 'package:sure_keep/Pages/home/home-content/ListAllContactsPhone.dart';
+import 'package:sure_keep/Provider/auth-provider.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+import '../../Models/user-model.dart';
+
+class Home extends StatefulWidget {
+  final UserModel userData;
+
+  const Home({required this.userData, Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+  int _selectedIndex = 0;
+  PageController? _pageController;
+  late AnimationController animationController;
+  late List<Widget> _pages;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  void initState() {
+    _pageController = PageController(initialPage: _selectedIndex);
+    animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+
+    _pages = <Widget>[
+      const ListAllContactPhone(),
+      // const Icon(
+      //   Icons.message_outlined,
+      //   size: 150,
+      // ),
+      const Icon(
+        Icons.search,
+        size: 150,
+      ),
+      const Icon(
+        Icons.contact_phone_outlined,
+        size: 150,
+      ),
+    ];
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(child: Container(child: Text("Home"),));
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize:Size.fromHeight(80.0),
+        child: AppBar(
+          title: Text(
+            _selectedIndex == 1 ? "Setting" : "People",
+          ),
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: Image.network(
+                widget.userData.imageUrl.toString(),
+
+              ),
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: InkWell(
+                onTap: () {
+                  AuthProvider.logout(context);
+                },
+                child: Icon(Icons.logout),
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (newpage) {
+          setState(() {
+            this._selectedIndex = newpage;
+          });
+        },
+        children: const [
+          ListAllContactPhone(),
+          ListAllContactPhone(),
+          ListAllContactPhone(),
+          //ListAllContactPhone(),
+
+          // IndexedStack(
+          //   index: _selectedIndex,
+          //   children: _pages,
+          // ),
+        ],
+      ),
+
+      // bottomNavigationBar: SizeTransition(
+      // sizeFactor: animationController,
+      // axisAlignment: -1.0,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        //New
+        backgroundColor: AppColors.logoColor,
+        // iconSize: 40,
+        mouseCursor: SystemMouseCursors.grab,
+
+        selectedFontSize: 12,
+        selectedIconTheme: const IconThemeData(color: Colors.white, size: 40),
+        selectedItemColor: Colors.white,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+
+        //hide label text
+        //showSelectedLabels: false,
+        //showUnselectedLabels: false,
+
+        unselectedIconTheme: const IconThemeData(
+          color: Colors.grey,
+        ),
+
+        onTap: (index) {
+          _pageController?.animateToPage(index,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeIn);
+        },
+        //onTap: _onItemTapped,
+        items: const <BottomNavigationBarItem>[
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.home),
+          //   label: 'Home',
+          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.contact_phone_outlined),
+            label: 'Contact',
+          ),
+        ],
+      ),
+    );
   }
 }

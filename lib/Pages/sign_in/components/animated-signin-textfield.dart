@@ -1,5 +1,6 @@
 import 'package:auto_animated/auto_animated.dart';
 import 'package:flutter/material.dart';
+import 'package:sure_keep/Pages/sign_in/components/signin-email-password.dart';
 import 'package:sure_keep/Pages/sign_in/components/social.dart';
 import 'package:sure_keep/Pages/sign_up/signup-screen.dart';
 import 'package:sure_keep/Router/navigate-route.dart';
@@ -31,7 +32,7 @@ class _AnimateSignInFieldsState extends State<AnimateSignInFields> {
       HeadText(),
 
       RectangularButton(text: 'Login', press: (){
-        NavigateRoute.gotoPage(context, SignUpScreen());
+        NavigateRoute.gotoPage(context, const SignInEmailPassword());
       }),
 
      const Social()

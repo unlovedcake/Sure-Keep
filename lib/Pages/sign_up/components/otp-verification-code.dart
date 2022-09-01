@@ -21,7 +21,7 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
   TextEditingController otpController5 = TextEditingController();
   TextEditingController otpController6 = TextEditingController();
 
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
   String? _phoneNumber;
 
 
@@ -38,6 +38,7 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
   @override
   Widget build(BuildContext context) {
  _phoneNumber =  context.watch<AuthProvider>().getPhoneNumber;
+ String _otpCode =  Provider.of<AuthProvider>(context,listen: false).getOtpCode;
 
     return Scaffold(
       appBar: AppBar(
@@ -87,12 +88,24 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
                 ),
                 textAlign: TextAlign.center,
               ),
+
+
               const SizedBox(
                 height: 10,
               ),
               const Text(
                 "Enter your OTP code number",
                 style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black38,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                _otpCode,
+
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.black38,
@@ -161,7 +174,7 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
                 onTap: (){
                   context.read<AuthProvider>().loginWithPhone(_phoneNumber!, context);
                 },
-                child: Text(
+                child: const Text(
                   "Resend New Code",
                   style: TextStyle(
                     fontSize: 18,
