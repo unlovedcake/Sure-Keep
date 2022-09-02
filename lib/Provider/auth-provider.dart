@@ -232,19 +232,21 @@ class AuthProvider extends ChangeNotifier {
           email: userModel!.email.toString(), password: password);
       user = userCredential.user;
 
+      userModel.docID = user!.uid;
+      userModel.phoneNumber = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
 
 
       await user!.updateDisplayName(userModel.firstName);
       await user!.updatePhotoURL(userModel.imageUrl);
+
       await user!.reload();
       user = _auth.currentUser;
 
-      userModel.docID = user!.uid;
-      userModel.phoneNumber = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
+
 
       final QuerySnapshot result = await FirebaseFirestore.instance
           .collection('table-user')
-          .where('docID', isEqualTo: user!.uid)
+          .where('email', isEqualTo:  userModel.email.toString())
           .get();
       final List<DocumentSnapshot> document = result.docs;
 
@@ -254,13 +256,24 @@ class AuthProvider extends ChangeNotifier {
             .doc(user!.uid)
             .set(userModel.toMap())
             .then((uid) async {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          prefs.setString('email', userModel.email.toString());
 
           userEmail = userModel.email.toString();
 
-          DocumentSnapshot documentSnapshot = document[0];
-          UserModel userData =  UserModel.fromMap(documentSnapshot);
+          UserModel userData = UserModel(
+            docID: userModel.docID,
+            firstName: userModel.firstName,
+            lastName: userModel.lastName,
+            address: userModel.address,
+            phoneNumber: userModel.phoneNumber,
+            email: userModel.email,
+            fakePassword: userModel.fakePassword,
+            gender: userModel.gender,
+            birthDate: userModel.birthDate, userType: userModel.userType,
+            imageUrl: userModel.imageUrl
+          );
+
+          // DocumentSnapshot documentSnapshot = document[0];
+          // UserModel userData =  UserModel.fromMap(documentSnapshot);
 
 
           NavigateRoute.gotoPage(context,  Home(userData: userData));
@@ -275,12 +288,12 @@ class AuthProvider extends ChangeNotifier {
               autoCloseDuration: const Duration(seconds: 3),
               type: QuickAlertType.success,
               text: 'Welcome, You are now logged in !!!',
-              onConfirmBtnTap: (){
-                Navigator.of(context).pop();
-              }
+
           );
 
 
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setString('email', userModel.email.toString());
 
 
           // Fluttertoast.showToast(
@@ -289,9 +302,10 @@ class AuthProvider extends ChangeNotifier {
           //   gravity: ToastGravity.CENTER_RIGHT,
           // );
 
-          notifyListeners();
+
         });
       }
+      notifyListeners();
 
     } on FirebaseAuthException catch (error) {
       Navigator.of(context).pop();
@@ -361,9 +375,7 @@ class AuthProvider extends ChangeNotifier {
             autoCloseDuration: const Duration(seconds: 3),
             type: QuickAlertType.success,
             text: 'Welcome, You are now logged in !!!',
-            onConfirmBtnTap: (){
-              Navigator.of(context).pop();
-            }
+
         );
 
         // Fluttertoast.showToast(

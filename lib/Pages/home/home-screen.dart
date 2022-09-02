@@ -6,6 +6,7 @@ import 'package:sure_keep/All-Constants/all_constants.dart';
 import 'package:sure_keep/Pages/home/home-content/ListAllContactsPhone.dart';
 import 'package:sure_keep/Provider/auth-provider.dart';
 
+import '../../Chat/person-who-chatted-you.dart';
 import '../../Models/user-model.dart';
 
 class Home extends StatefulWidget {
@@ -36,7 +37,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         vsync: this, duration: const Duration(milliseconds: 300));
 
     _pages = <Widget>[
-      const ListAllContactPhone(),
+      ListAllContactPhone(userData: widget.userData),
       // const Icon(
       //   Icons.message_outlined,
       //   size: 150,
@@ -63,35 +64,42 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize:Size.fromHeight(80.0),
-        child: AppBar(
-          title: Text(
-            _selectedIndex == 1 ? "Setting" : "People",
-          ),
-          automaticallyImplyLeading: false,
-          centerTitle: true,
-          elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: Image.network(
-                widget.userData.imageUrl.toString(),
-
+        preferredSize: Size.fromHeight(80.0),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: AppBar(
+            title: Column(
+              children: [
+                Text(
+                  _selectedIndex == 1 ? "Search" :  _selectedIndex == 2 ? "Chat" :"People",
+                ),
+                Text(widget.userData.firstName.toString(),style: TextStyle(fontSize: 12),),
+              ],
+            ),
+            automaticallyImplyLeading: false,
+            centerTitle: true,
+            elevation: 0,
+            leading: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  widget.userData.imageUrl.toString(),
+                ),
               ),
             ),
-          ),
-          actions: [
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: InkWell(
-                onTap: () {
-                  AuthProvider.logout(context);
-                },
-                child: Icon(Icons.logout),
+            actions: [
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: InkWell(
+                  onTap: () {
+                    AuthProvider.logout(context);
+                  },
+                  child: Icon(Icons.logout),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: PageView(
@@ -101,10 +109,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             this._selectedIndex = newpage;
           });
         },
-        children: const [
-          ListAllContactPhone(),
-          ListAllContactPhone(),
-          ListAllContactPhone(),
+        children: [
+          ListAllContactPhone(userData: widget.userData),
+          Icon(Icons.search),
+          const PersonWhoChattedYou(),
           //ListAllContactPhone(),
 
           // IndexedStack(
@@ -149,16 +157,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           //   label: 'Home',
           // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Chat',
+            icon: Icon(Icons.contact_phone_outlined),
+            label: 'Contact',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: 'Search',
           ),
+
           BottomNavigationBarItem(
-            icon: Icon(Icons.contact_phone_outlined),
-            label: 'Contact',
+            icon: Icon(Icons.message),
+            label: 'Chat',
           ),
         ],
       ),

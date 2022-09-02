@@ -5,7 +5,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:sure_keep/Chat/chatConversation.dart';
 import 'package:sure_keep/Models/user-model.dart';
+import 'package:sure_keep/Router/navigate-route.dart';
 import 'package:telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,7 +16,9 @@ onBackgroundMessage(SmsMessage message) {
 }
 
 class ListAllContactPhone extends StatefulWidget {
-  const ListAllContactPhone({Key? key}) : super(key: key);
+
+  final UserModel userData;
+  const ListAllContactPhone({required this.userData, Key? key}) : super(key: key);
 
   @override
   State<ListAllContactPhone> createState() => _ListAllContactPhoneState();
@@ -26,7 +30,6 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
   String _message = "You are invited";
   final telephony = Telephony.instance;
 
-  UserModel? userModel;
 
   List<String> phoneNumber = [];
 
@@ -35,19 +38,20 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
         .collection('table-user')
         .get();
     final List<DocumentSnapshot> document = result.docs;
+
+
     DocumentSnapshot documentSnapshot = document[0];
 
     for(int i=0; i < document.length; i++){
       //DocumentSnapshot documentSnapshot = document[i];
-      //userModel = UserModel.fromMap(documentSnapshot);
+      //userModel = UserModel.fromMap(result.docs);
 
-      //userModel!.phoneNumber = document[i]['phoneNumber'];
 
       phoneNumber.add(document[i]['phoneNumber']);
 
 
     }
-    setState(() {});
+
     print(phoneNumber);
     print("OKEYEYE");
 
@@ -150,12 +154,17 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                             : "--";
                         String number = "";
 
-
-                        if(!num.contains('+63')){
+                        if(num[0].contains('0')){
                           number  = num.replaceRange(0,1, '+63');
                         }else{
                           number = num;
                         }
+
+                        // if(!num.contains('+63')){
+                        //   number  = num.replaceRange(0,1, '+63');
+                        // }else{
+                        //   number = num;
+                        // }
 
 
                         // return ListTile(
@@ -214,18 +223,47 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                               children: [
                                 Text(
                                            "  ${contacts![index].name.first} ${contacts![index].name.last}"),
-                                Text('  $number'),
+                                Text('  $num'),
                               ],
                             ),
                           ),
 
-                              OutlinedButton(onPressed: (){
-                                if(!phoneNumber.contains(number)){
-                                  telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
-                                      " https://www.facebook.com/kissiney.sweet ");
-                                }
 
-                              }, child: phoneNumber.contains(number.replaceAll(" ", "")) ? Text("Connect",style: TextStyle(color: Colors.red)): Text("Invite",style: TextStyle(color: Colors.green),)),
+                              phoneNumber.contains(number.replaceAll(" ", "")) ?
+                              OutlinedButton(onPressed: () async{
+
+
+                                final QuerySnapshot result = await FirebaseFirestore.instance
+                                    .collection('table-user')
+                                    .where('phoneNumber', isEqualTo: number.replaceAll(" ", "") )
+                                    .get();
+                                final List<DocumentSnapshot> document = result.docs;
+                                UserModel? userModel;
+                                DocumentSnapshot documentSnapshot = document[0];
+
+                                userModel = UserModel.fromMap( documentSnapshot);
+
+                                print(userModel);
+                                NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
+
+                              }, child: Text('Connect',style: TextStyle(color: Colors.red),),)
+                              : OutlinedButton(onPressed: (){
+                                telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                                    " https://www.facebook.com/kissiney.sweet ");
+
+                              }, child: Text('Invite')),
+
+
+                              // OutlinedButton(onPressed: (){
+                              //   if(!phoneNumber.contains(number)){
+                              //     telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                              //         " https://www.facebook.com/kissiney.sweet ");
+                              //   }else{
+                              //     NavigateRoute.gotoPage(context, ChatConversation(user: widget.userData));
+                              //   }
+                              //
+                              // }, child: phoneNumber.contains(number.replaceAll(" ", "")) ? Text("Connect",style: TextStyle(color: Colors.red)): Text("Invite",style: TextStyle(color: Colors.green),)),
+                              //
                             ],
                           ),
                         );
