@@ -1,18 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:sure_keep/All-Constants/all_constants.dart';
 import 'package:sure_keep/Pages/home/home-content/ListAllContactsPhone.dart';
+import 'package:sure_keep/Pages/home/profile-screen.dart';
 import 'package:sure_keep/Provider/auth-provider.dart';
-
+import 'package:http/http.dart' as http;
 import '../../Chat/person-who-chatted-you.dart';
 import '../../Models/user-model.dart';
 
-class Home extends StatefulWidget {
-  final UserModel userData;
 
-  const Home({required this.userData, Key? key}) : super(key: key);
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+   await Firebase.initializeApp();
+}
+class Home extends StatefulWidget {
+  //final UserModel userData;
+
+  const Home({Key? key}) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
@@ -30,14 +42,40 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     });
   }
 
+  User? user = FirebaseAuth.instance.currentUser;
+
+  UserModel? userData = UserModel();
+
+  Future<UserModel> getLoggedInUser() async {
+    final QuerySnapshot result = await FirebaseFirestore.instance
+        .collection('table-user')
+        .where('email', isEqualTo: user!.email)
+        .get();
+    List<DocumentSnapshot> document = result.docs;
+    DocumentSnapshot documentSnapshot = document[0];
+
+    print(user!.email);
+
+
+    return userData = UserModel.fromMap(documentSnapshot);
+  }
+
+
+  late AndroidNotificationChannel channel;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+
   @override
   void initState() {
+
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     _pageController = PageController(initialPage: _selectedIndex);
     animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300));
 
     _pages = <Widget>[
-      ListAllContactPhone(userData: widget.userData),
+      ListAllContactPhone(userData: userData!),
       // const Icon(
       //   Icons.message_outlined,
       //   size: 150,
@@ -50,8 +88,91 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         Icons.contact_phone_outlined,
         size: 150,
       ),
+
+      const Icon(
+        Icons.person,
+        size: 150,
+      ),
     ];
     super.initState();
+
+    getLoggedInUser();
+    loadFCM();
+    listenFCM();
+  }
+
+  Future<Uint8List> _getByteArrayFromUrl(String url) async {
+    final http.Response response = await http.get(Uri.parse(url));
+    return response.bodyBytes;
+  }
+
+  void listenFCM() async {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+      final ByteArrayAndroidBitmap largeIcon = ByteArrayAndroidBitmap(
+          await _getByteArrayFromUrl(userData!.imageUrl.toString()));
+      final ByteArrayAndroidBitmap bigPicture = ByteArrayAndroidBitmap(
+          await _getByteArrayFromUrl(userData!.imageUrl.toString()));
+
+      final BigPictureStyleInformation bigPictureStyleInformation =
+      BigPictureStyleInformation(bigPicture,
+          largeIcon: largeIcon,
+          contentTitle: notification?.title,
+          htmlFormatContentTitle: true,
+          summaryText: notification?.body,
+          htmlFormatSummaryText: true);
+
+      if (notification != null && android != null && !kIsWeb) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              // TODO add a proper drawable resource to android, for now using
+              //      one that already exists in example app.
+              styleInformation: bigPictureStyleInformation,  // it will display the url image
+              icon: 'img',
+
+              //largeIcon: const DrawableResourceAndroidBitmap('ic_launcher'),
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  void loadFCM() async {
+    if (!kIsWeb) {
+      channel = const AndroidNotificationChannel(
+        'high_importance_channel', // id
+        'High Importance Notifications', // title
+        importance: Importance.high,
+        enableVibration: true,
+      );
+
+      flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+      /// Create an Android Notification Channel.
+      ///
+      /// We use this channel in the `AndroidManifest.xml` file to override the
+      /// default FCM channel to enable heads up notifications.
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+
+      /// Update the iOS foreground notification presentation options to allow
+      /// heads up notifications.
+      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
   @override
@@ -62,114 +183,230 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80.0),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: AppBar(
-            title: Column(
-              children: [
-                Text(
-                  _selectedIndex == 1 ? "Search" :  _selectedIndex == 2 ? "Chat" :"People",
+    DateTime pre_backpress = DateTime.now();
+
+    return FutureBuilder(
+        future: getLoggedInUser(),
+        builder: (context, snapshot) {
+          return Scaffold(
+            appBar: PreferredSize(
+              preferredSize: Size.fromHeight(80.0),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: AppBar(
+                  title: Column(
+                    children: [
+                      Text(
+                        _selectedIndex == 1
+                            ? "Search"
+                            : _selectedIndex == 2
+                                ? "Chat"
+                                : _selectedIndex == 3
+                                    ? "Profile"
+                                    : "People",
+                      ),
+                      Text(
+                        userData!.firstName.toString() ?? "",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  automaticallyImplyLeading: false,
+                  centerTitle: true,
+                  elevation: 0,
+                  leading: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        userData!.imageUrl.toString(),
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: InkWell(
+                        onTap: () {
+                          AuthProvider.logout(context);
+                        },
+                        child: Icon(Icons.logout),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(widget.userData.firstName.toString(),style: TextStyle(fontSize: 12),),
+              ),
+            ),
+
+            body: WillPopScope(
+              onWillPop: () async{
+                final timegap = DateTime.now().difference(pre_backpress);
+                final cantExit = timegap >= Duration(seconds: 2);
+                pre_backpress = DateTime.now();
+                if(cantExit){
+
+                  Fluttertoast.showToast(
+                    msg: 'Press back button again to exit.',
+                    timeInSecForIosWeb: 3,
+                    gravity: ToastGravity.CENTER_RIGHT,
+                  );
+                  return false;
+                }else{
+                  return true;
+                }
+              },
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (int newpage) {
+                  setState(() {
+                    _selectedIndex = newpage;
+                  });
+                },
+                children: [
+
+                  ListAllContactPhone(userData: userData!),
+                  Icon(Icons.search),
+                  const PersonWhoChattedYou(),
+
+                  ProfileScreen(user: userData!),
+                  //ListAllContactPhone(),
+
+                  // IndexedStack(
+                  //   index: _selectedIndex,
+                  //   children: _pages,
+                  // ),
+                ],
+              ),
+            ),
+
+            // bottomNavigationBar: SizeTransition(
+            // sizeFactor: animationController,
+            // axisAlignment: -1.0,
+            bottomNavigationBar: BottomNavigationBar(
+              unselectedItemColor: Colors.black,
+              currentIndex: _selectedIndex,
+              //New
+              backgroundColor: AppColors.logoColor,
+              // iconSize: 40,
+              //mouseCursor: SystemMouseCursors.grab,
+
+              selectedFontSize: 12,
+              selectedIconTheme:
+                  const IconThemeData(color: AppColors.logoColor, size: 40),
+              selectedItemColor: AppColors.logoColor,
+              selectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.black),
+
+              //hide label text
+              //showSelectedLabels: false,
+              //showUnselectedLabels: false,
+
+              unselectedIconTheme: const IconThemeData(
+                color: Colors.grey,
+              ),
+
+              onTap: (index) {
+                _pageController?.animateToPage(index,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeIn);
+              },
+              //onTap: _onItemTapped,
+              items: const <BottomNavigationBarItem>[
+                // BottomNavigationBarItem(
+                //   icon: Icon(Icons.home),
+                //   label: 'Home',
+                // ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.contact_phone_outlined),
+                  label: 'Contact',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.search),
+                  label: 'Search',
+                ),
+
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.message),
+                  label: 'Chat',
+                ),
+
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person),
+                  label: 'Profile',
+                ),
               ],
             ),
-            automaticallyImplyLeading: false,
-            centerTitle: true,
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  widget.userData.imageUrl.toString(),
+          );
+        });
+  }
+}
+
+class DrawerWidget extends StatelessWidget {
+  const DrawerWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Drawer(
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: [
+            const UserAccountsDrawerHeader(
+              decoration: BoxDecoration(color: const Color(0xff764abc)),
+              accountName: Text(
+                "Pinkesh Darji",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              accountEmail: Text(
+                "pinkesh.earth@gmail.com",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              currentAccountPicture: FlutterLogo(),
             ),
-            actions: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: InkWell(
-                  onTap: () {
-                    AuthProvider.logout(context);
-                  },
-                  child: Icon(Icons.logout),
-                ),
+            ListTile(
+              leading: Icon(
+                Icons.home,
               ),
-            ],
-          ),
+              title: const Text('Page 1'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.train,
+              ),
+              title: const Text('Page 2'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            AboutListTile(
+              // <-- SEE HERE
+              icon: Icon(
+                Icons.info,
+              ),
+              child: Text('About app'),
+              applicationIcon: Icon(
+                Icons.local_play,
+              ),
+              applicationName: 'My Cool App',
+              applicationVersion: '1.0.25',
+              applicationLegalese: '© 2019 Company',
+              aboutBoxChildren: [
+                ///Content goes here...
+              ],
+            ),
+          ],
         ),
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (newpage) {
-          setState(() {
-            this._selectedIndex = newpage;
-          });
-        },
-        children: [
-          ListAllContactPhone(userData: widget.userData),
-          Icon(Icons.search),
-          const PersonWhoChattedYou(),
-          //ListAllContactPhone(),
-
-          // IndexedStack(
-          //   index: _selectedIndex,
-          //   children: _pages,
-          // ),
-        ],
-      ),
-
-      // bottomNavigationBar: SizeTransition(
-      // sizeFactor: animationController,
-      // axisAlignment: -1.0,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        //New
-        backgroundColor: AppColors.logoColor,
-        // iconSize: 40,
-        mouseCursor: SystemMouseCursors.grab,
-
-        selectedFontSize: 12,
-        selectedIconTheme: const IconThemeData(color: Colors.white, size: 40),
-        selectedItemColor: Colors.white,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-
-        //hide label text
-        //showSelectedLabels: false,
-        //showUnselectedLabels: false,
-
-        unselectedIconTheme: const IconThemeData(
-          color: Colors.grey,
-        ),
-
-        onTap: (index) {
-          _pageController?.animateToPage(index,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeIn);
-        },
-        //onTap: _onItemTapped,
-        items: const <BottomNavigationBarItem>[
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.home),
-          //   label: 'Home',
-          // ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.contact_phone_outlined),
-            label: 'Contact',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Chat',
-          ),
-        ],
       ),
     );
   }

@@ -99,13 +99,13 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
                     AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
                     if ((snapshot.data?.docs.length ?? 0) > 0) {
-                      return ListView.separated(
+                      return ListView.builder(
                         shrinkWrap: true,
                         itemCount: snapshot.data!.docs.length,
                         itemBuilder: (context, index) =>
                             buildItem(context, snapshot.data?.docs[index]),
-                        separatorBuilder: (BuildContext context, int index) =>
-                            const Divider(),
+                        // separatorBuilder: (BuildContext context, int index) =>
+                        //     const Divider(),
                       );
                     } else {
                       return const Center(
@@ -204,7 +204,7 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
                         user.email
                         ?  SizedBox(width: 160,)
                         : Container(
-                      width: 120,
+                      width: 110,
                           child: Text(
                       documentSnapshot.get('chattingWith')['lastMessage'],
                             maxLines: 2, overflow: TextOverflow.ellipsis,
@@ -221,7 +221,7 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
                       : readTimestamp(documentSnapshot
                       .get('chattingWith')['dateLastMessage']
                       .millisecondsSinceEpoch),
-                  style: const TextStyle(color: Colors.black),
+                  style:  TextStyle(color: Colors.grey[500],fontSize: 12),
                 ),
 
 

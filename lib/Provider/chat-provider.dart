@@ -1,0 +1,119 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import 'package:sure_keep/Chat/chatConversation.dart';
+
+import '../Chat/fake-conversation.dart';
+import '../Models/user-model.dart';
+import '../Router/navigate-route.dart';
+import '../Widgets/progress-dialog.dart';
+import 'auth-provider.dart';
+
+class ChatProvider extends ChangeNotifier {
+  final _auth = FirebaseAuth.instance;
+  bool isSend = true;
+
+  String errorMessage = "";
+
+  setSend(bool send) {
+    isSend = send;
+    notifyListeners();
+  }
+
+  bool get getSend => isSend;
+
+  signInFakePassword(String email, String password, UserModel userModel,
+      BuildContext context) async {
+    try {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return ProgressDialog(
+              message: "Authenticating, Please wait...",
+            );
+          });
+
+      final QuerySnapshot result = await FirebaseFirestore.instance
+          .collection('table-user')
+          .where('email', isEqualTo: email)
+          .get();
+      final List<DocumentSnapshot> document = result.docs;
+      DocumentSnapshot documentSnapshot = document[0];
+      UserModel userData = UserModel.fromMap(documentSnapshot);
+
+      if (userData.fakePassword == password) {
+        Navigator.pop(context);
+        NavigateRoute.gotoPage(context, FakeConversation(user: userModel));
+      } else {
+        await _auth
+            .signInWithEmailAndPassword(email: email, password: password)
+            .then((id) async {
+          Navigator.pop(context);
+          NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
+
+          context.read<AuthProvider>().setAppActive(false);
+
+          // QuickAlert.show(
+          //
+          //   //customAsset: 'assets/images/form-header-img.png',
+          //   context: context,
+          //   autoCloseDuration: const Duration(seconds: 3),
+          //   type: QuickAlertType.success,
+          //   text: 'Welcome, You are now logged in !!!',
+          //
+          // );
+
+          // Fluttertoast.showToast(
+          //   msg: "You are now logged in... :) ",
+          //   gravity: ToastGravity.CENTER_RIGHT,
+          // );
+        });
+
+        notifyListeners();
+      }
+    } on FirebaseAuthException catch (error) {
+      Navigator.of(context).pop();
+      switch (error.code) {
+        case "invalid-email":
+          errorMessage = "Your email address appears to be invalid.";
+
+          break;
+        case "wrong-password":
+          errorMessage = "Your password is wrong.";
+          break;
+        case "user-not-found":
+          errorMessage = "User with this email doesn't exist.";
+          break;
+        case "user-disabled":
+          errorMessage = "User with this email has been disabled.";
+          break;
+        case "too-many-requests":
+          errorMessage = "Too many requests";
+          break;
+        case "operation-not-allowed":
+          errorMessage = "Signing in with Email and Password is not enabled.";
+          break;
+        default:
+          errorMessage = "Check Your Internet Access.";
+      }
+
+      // QuickAlert.show(
+      //   context: context,
+      //   autoCloseDuration: const Duration(seconds: 3),
+      //   type: QuickAlertType.error,
+      //   title: 'Oops...',
+      //   text: errorMessage!,
+      //);
+      Fluttertoast.showToast(
+        msg: errorMessage!,
+        timeInSecForIosWeb: 3,
+        gravity: ToastGravity.CENTER_RIGHT,
+      );
+      print(error.code);
+    }
+  }
+}

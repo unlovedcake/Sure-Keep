@@ -112,6 +112,8 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
               validator: (value) {
                 if (value!.isEmpty) {
                   return ("Fake Password  is required");
+                }else if(passwordController.text == fakeController.text){
+                  return ("Fake Password  should be different for password.");
                 }
               },
             ),

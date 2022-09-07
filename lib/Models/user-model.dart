@@ -14,6 +14,7 @@ class UserModel {
   String? birthDate;
   String? userType;
   String? imageUrl;
+  String? token;
   Map? chattingWith;
   Map? geoLocation;
 
@@ -30,6 +31,7 @@ class UserModel {
         this.birthDate,
         this.userType,
         this.imageUrl,
+        this.token,
         this.chattingWith,
         this.geoLocation});
 
@@ -49,6 +51,7 @@ class UserModel {
       birthDate: map['birthDate'],
       userType: map['userType'],
       imageUrl: map['imageUrl'],
+      token: map['token'],
       chattingWith: map['chattingWith'],
       geoLocation: map['geoLocation'],
     );
@@ -70,6 +73,7 @@ class UserModel {
       'birthDate': birthDate,
       'userType': userType,
       'imageUrl': imageUrl,
+      'token': token,
       'chattingWith': chattingWith,
       'geoLocation': geoLocation,
     };

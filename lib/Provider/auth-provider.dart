@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -21,6 +22,8 @@ class AuthProvider extends ChangeNotifier {
   User? user = FirebaseAuth.instance.currentUser;
   final _auth = FirebaseAuth.instance;
 
+
+
   String? errorMessage;
   String? userEmail;
   String verificationID = "";
@@ -32,9 +35,17 @@ class AuthProvider extends ChangeNotifier {
 
   bool isGenderWoman = false;
 
-  bool isAppActive = true;
+  bool isAppActive = false;
+  bool isBackGroundMode = false;
 
   bool get getAppActive => isAppActive;
+
+  bool get getBackGroundMode =>  isBackGroundMode;
+
+  setBackGroundMode(bool isActive) {
+    isBackGroundMode = isActive;
+    notifyListeners();
+  }
 
   setAppActive(bool isActive) {
     isAppActive = isActive;
@@ -56,6 +67,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+
   String get getGenderValue => genderValue;
   bool get getGenderMan => isGenderMan;
   bool get getGenderWoman => isGenderWoman;
@@ -65,6 +77,9 @@ class AuthProvider extends ChangeNotifier {
   String get getOtpCode => _otpCode;
 
   String get getUserEmail => userEmail!;
+
+
+
 
 
 
@@ -88,8 +103,7 @@ class AuthProvider extends ChangeNotifier {
 
              _otpCode = credential.smsCode!;
 
-             Navigator.pop(context);
-             NavigateRoute.gotoPage(context, const OTPVerificationCode());
+
 
             Fluttertoast.showToast(
               msg: 'OTP sent successfully.',
@@ -126,8 +140,8 @@ class AuthProvider extends ChangeNotifier {
           //   );
           // }
           Navigator.pop(context);
-          print(e.message);
-          print("EXPIRED");
+          print(e.toString());
+
         },
         codeSent: (String verificationId, int? resendToken) {
 
@@ -135,21 +149,27 @@ class AuthProvider extends ChangeNotifier {
           verificationID = verificationId;
           _phoneNumber = phoneNumber;
 
+          Navigator.pop(context);
+          NavigateRoute.gotoPage(context, const OTPVerificationCode());
+          print("Code Sent");
 
-          print("OTP Sent Successfully");
+
         },
         codeAutoRetrievalTimeout: (String verificationId) {
 
 
-          print("TimeOut $verificationId");
+
             Navigator.pop(context);
+
+            print("Code Timeout");
         },
-        timeout: const Duration(seconds: 30),
+        timeout: const Duration(seconds: 60),
       );
       notifyListeners();
     } catch (e) {
 
       print(e.toString());
+
     }
   }
 
@@ -227,13 +247,19 @@ class AuthProvider extends ChangeNotifier {
             );
           });
 
+      String? token = await FirebaseMessaging.instance.getToken();
+
       UserCredential userCredential =
       await _auth.createUserWithEmailAndPassword(
           email: userModel!.email.toString(), password: password);
       user = userCredential.user;
 
       userModel.docID = user!.uid;
-      userModel.phoneNumber = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
+
+     // String phoneNum = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
+
+      userModel.phoneNumber = _phoneNumber;
+      userModel.token = token;
 
 
       await user!.updateDisplayName(userModel.firstName);
@@ -276,7 +302,7 @@ class AuthProvider extends ChangeNotifier {
           // UserModel userData =  UserModel.fromMap(documentSnapshot);
 
 
-          NavigateRoute.gotoPage(context,  Home(userData: userData));
+          NavigateRoute.gotoPage(context,  Home());
 
 
 
@@ -348,35 +374,47 @@ class AuthProvider extends ChangeNotifier {
             );
           });
 
+      final QuerySnapshot result =  await FirebaseFirestore.instance
+          .collection('table-user')
+          .where('email', isEqualTo: email)
+          .get();
+      final List<DocumentSnapshot> document = result.docs;
+
       await _auth
           .signInWithEmailAndPassword(email: email, password: password)
-          .then((id) async {
+          .then((id)  async{
 
-        final QuerySnapshot result = await FirebaseFirestore.instance
-            .collection('table-user')
-            .where('email', isEqualTo: email)
-            .get();
-        final List<DocumentSnapshot> document = result.docs;
+
 
         if(document.isNotEmpty){
           DocumentSnapshot documentSnapshot = document[0];
           UserModel userData =  UserModel.fromMap(documentSnapshot);
-
-          NavigateRoute.gotoPage(context, Home( userData: userData));
-        }
+          NavigateRoute.gotoPage(context, Home());
 
 
 
+          SharedPreferences prefs = await SharedPreferences.getInstance();
 
-        QuickAlert.show(
+          prefs.setString('email', email);
 
-          //customAsset: 'assets/images/form-header-img.png',
+
+
+          QuickAlert.show(
+
+            //customAsset: 'assets/images/form-header-img.png',
             context: context,
             autoCloseDuration: const Duration(seconds: 3),
             type: QuickAlertType.success,
             text: 'Welcome, You are now logged in !!!',
 
-        );
+          );
+
+        }
+
+
+
+
+
 
         // Fluttertoast.showToast(
         //   msg: "You are now logged in... :) ",
@@ -385,8 +423,6 @@ class AuthProvider extends ChangeNotifier {
 
 
 
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString('email', email);
 
 
 
@@ -442,6 +478,20 @@ class AuthProvider extends ChangeNotifier {
 
     Navigator.of(context)
         .pushReplacement(MaterialPageRoute(builder: (context) => const SignInScreen()));
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('email');
+  }
+
+  Future<bool> isLoggedIn(UserModel userModel, BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var email = prefs.getString('email');
+    if (email != null) {
+      return  true;
+    } else {
+      return false;
+    }
   }
 
 }

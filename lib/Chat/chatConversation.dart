@@ -1,12 +1,20 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sure_keep/All-Constants/all_constants.dart';
+import 'package:sure_keep/Provider/chat-provider.dart';
 import '../Models/conversation.dart';
 import '../Models/user-model.dart';
 import '../Provider/auth-provider.dart';
 import '../Utensils/read_timestamp.dart';
+import 'encrypted-chat-message.dart';
+import 'package:http/http.dart' as http;
 
 class ChatConversation extends StatefulWidget {
   final UserModel user;
@@ -18,16 +26,24 @@ class ChatConversation extends StatefulWidget {
 }
 
 class _ChatConversationState extends State<ChatConversation> {
-
   TextEditingController messageController = TextEditingController();
-
-
 
   User? user = FirebaseAuth.instance.currentUser;
 
   String? currentUserId;
   String? groupChatId;
 
+
+  bool? _isForeGround;
+
+
+  Future<bool?> isForeGround() async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isForeGround = prefs.getBool('isBackGroundMode') ?? false;
+    _isForeGround = isForeGround;
+
+    return  _isForeGround;
+  }
 
   void read() {
     currentUserId = user!.uid;
@@ -44,57 +60,98 @@ class _ChatConversationState extends State<ChatConversation> {
     return FirebaseFirestore.instance
         .collection(collectionPath)
         .doc(docPath)
-        .update(dataNeedUpdate);
+        .update(dataNeedUpdate).whenComplete(() => messageController.text = "");
+  }
+
+
+  void sendPushMessage(String token, String title, String body) async {
+    try {
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+          'key=AAAA46pw8dw:APA91bH16DQMBlHChehqWl-REs6Y4pkEVqOTtME1yRgGvN-8yrQcy5uwzXDW_HbR_jK2o_sGwjTo-rWKVXkbz62nMKJN3lqrhWCrkxMN7XG4D32V3utQlgHLUvmwhAdIgnVDIkOLJRCJ',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{'body': body, 'title': title},
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'id': '1',
+              'status': 'done'
+            },
+            "to": token,
+          },
+        ),
+      );
+    } catch (e) {
+      print("error push notification");
+    }
   }
 
   @override
   void initState() {
     super.initState();
-
+    isForeGround();
     read();
   }
 
   void sendChatMessage(String content, int type, String groupChatId,
       String currentUserId, String peerId) {
-    DocumentReference documentReference = FirebaseFirestore.instance
-        .collection('table-chat-conversation')
-        .doc(groupChatId)
-        .collection(groupChatId)
-        .doc(DateTime.now().millisecondsSinceEpoch.toString());
 
-    Conversation conversation = Conversation()
-      ..idTo = peerId
-      ..idFrom = currentUserId
-      ..messageText = content
-      ..dateCreated = DateTime.now()
-      ..type = type;
+    if(content.trim() == ""){
+        Fluttertoast.showToast(
+          timeInSecForIosWeb: 3,
+          msg: "Enter Text Message",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER_RIGHT,
+        );
 
+    }else{
+      DocumentReference documentReference = FirebaseFirestore.instance
+          .collection('table-chat-conversation')
+          .doc(groupChatId)
+          .collection(groupChatId)
+          .doc(DateTime.now().millisecondsSinceEpoch.toString());
 
-    FirebaseFirestore.instance.runTransaction((transaction) async {
-      transaction.set(documentReference, conversation.toMap());
-    }).whenComplete(() {
-      if (currentUserId == widget.user.docID.toString()) {
-        return;
-      }
-      updateDataFirestore(
-        'table-user',
-        currentUserId,
-        {
-          'chattingWith': {
-            'chattingWith':widget.user.email,
-            'lastMessage': messageController.text,
-            "dateLastMessage": DateTime.now(),
-          }
-        },
-      );
-    });
+      Conversation conversation = Conversation()
+        ..idTo = peerId
+        ..idFrom = currentUserId
+        ..messageText = content
+        ..dateCreated = DateTime.now()
+        ..type = type;
+
+      FirebaseFirestore.instance.runTransaction((transaction) async {
+        transaction.set(documentReference, conversation.toMap());
+
+        sendPushMessage(widget.user.token.toString(), widget.user.firstName.toString(),content);
+
+      }).whenComplete(() {
+        if (currentUserId == widget.user.docID.toString()) {
+          return;
+        }
+        updateDataFirestore(
+          'table-user',
+          currentUserId,
+          {
+            'chattingWith': {
+              'chattingWith': widget.user.email,
+              'lastMessage': messageController.text,
+              "dateLastMessage": DateTime.now(),
+            }
+          },
+        );
+      });
+    }
+
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
+
+    print("Build");
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -157,50 +214,7 @@ class _ChatConversationState extends State<ChatConversation> {
       ),
       body: Column(
         children: <Widget>[
-          // ListView.builder(
-          //   itemCount: messages.length,
-          //   shrinkWrap: true,
-          //   padding: EdgeInsets.only(top: 10, bottom: 10),
-          //   physics: NeverScrollableScrollPhysics(),
-          //   itemBuilder: (context, index) {
-          //     return Container(
-          //       padding:
-          //           EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
-          //       child: Align(
-          //         alignment: (messages[index].messageType == "receiver"
-          //             ? Alignment.topLeft
-          //             : Alignment.topRight),
-          //         child: Wrap(
-          //           children: [
-          //         (messages[index].messageType == "receiver" ?  CircleAvatar(
-          //                 child: Icon(
-          //               Icons.person,
-          //               size: 20,
-          //             ),radius: 10,) : SizedBox() ),
-          //             Column(
-          //               children: [
-          //                 Container(
-          //                   decoration: BoxDecoration(
-          //                     borderRadius: BorderRadius.circular(20),
-          //                     color: (messages[index].messageType == "receiver"
-          //                         ? Colors.grey.shade200
-          //                         : Colors.blue[200]),
-          //                   ),
-          //                   padding: EdgeInsets.all(16),
-          //                   child: Text(
-          //                     messages[index].messageContent,
-          //                     style: TextStyle(fontSize: 15),
-          //                   ),
-          //                 ),
-          //                 Text(" 3 minutes ago",style: TextStyle(fontSize: 10,color: Colors.grey),),
-          //               ],
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     );
-          //   },
-          // ),
+
           Expanded(child: buildListMessage()),
           Align(
             alignment: Alignment.bottomLeft,
@@ -238,8 +252,42 @@ class _ChatConversationState extends State<ChatConversation> {
                       keyboardType: TextInputType.multiline,
                       minLines: 1,
                       maxLines: 4,
-                      onChanged: (value) => {setState(() => value)},
+                      //onChanged: (value) {
+
+                          //
+                          // if (value.isEmpty) {
+                          //   context.read<ChatProvider>().setSend(true);
+                          //
+                          // }else{
+                          //   context.read<ChatProvider>().setSend(false);
+                          // }
+
+
+                      //},
                       decoration: InputDecoration(
+                          suffixIcon: InkWell(
+                              onTap: () {
+
+                                sendChatMessage(
+                                    messageController.text,
+                                    0,
+                                    groupChatId!,
+                                    currentUserId!,
+                                    widget.user.docID.toString());
+                              },
+                              child: Icon(Icons.send,color: AppColors.logoColor,)),
+                        // suffixIcon: context.watch<AuthProvider>().getAppActive != false ? InkWell(
+                        //     onTap: () {
+                        //
+                        //       sendChatMessage(
+                        //           messageController.text,
+                        //           0,
+                        //           groupChatId!,
+                        //           currentUserId!,
+                        //           widget.user.docID.toString());
+                        //     },
+                        //     child: Icon(Icons.send,color: AppColors.logoColor,)) :  Icon(Icons.send,color: Colors.grey,),
+
                         hintText: "   Write Comment",
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         border: OutlineInputBorder(
@@ -249,83 +297,22 @@ class _ChatConversationState extends State<ChatConversation> {
                       ),
                     ),
                   ),
-                  // Expanded(
-                  //   child: TextFormField(
-                  //     autofocus: true,
-                  //     autocorrect: false,
-                  //     keyboardType: TextInputType.multiline,
-                  //     minLines: 1,
-                  //     maxLines: 4,
-                  //     decoration: InputDecoration(
-                  //         hintText: "Write message...",
-                  //         hintStyle: TextStyle(color: Colors.black54),
-                  //         border: InputBorder.none),
-                  //   ),
-                  // ),
                   SizedBox(
                     width: 15,
                   ),
-                  FloatingActionButton(
-                    onPressed: () async {
-                      sendChatMessage(messageController.text, 0, groupChatId!,
-                          currentUserId!, widget.user.docID.toString());
-
-                      // var documentReference = FirebaseFirestore.instance
-                      //     .collection('table-conversation')
-                      //     .doc(user!.uid)
-                      //     .collection(user!.uid)
-                      //     .doc(
-                      //         DateTime.now().millisecondsSinceEpoch.toString());
-                      //
-                      //
-                      // Conversation conversation = Conversation()
-                      //   ..idTo =  user!.uid
-                      //   ..idFrom = widget.user.docID.toString()
-                      //   ..messageText =  messageController.text
-                      //   ..dateCreated = DateTime.now()
-                      //   ..type = 0
-                      //   ..user = {
-                      //     'reciverName': widget.user.firstName,
-                      //     'recieverEmail': widget.user.email,
-                      //     'recieverImage': widget.user.imageUrl,
-                      //   };
-                      //
-                      //
-                      // //
-                      // // ChatMessages chatMessages = ChatMessages(
-                      // //     idFrom: widget.user.docID.toString(),
-                      // //     idTo: user!.uid,
-                      // //     timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
-                      // //     content: messageController.text,
-                      // //     type: 0);
-                      // FirebaseFirestore.instance.runTransaction((transaction) async {
-                      //   transaction.set(documentReference, conversation.toMap());
-                      // });
-
-                      // FirebaseFirestore.instance
-                      //     .runTransaction((transaction) async {
-                      //   await transaction.set(
-                      //     documentReference,
-                      //     {
-                      //       'idFrom': widget.user.docID,
-                      //       'idTo': user!.uid,
-                      //       'createdAt': DateTime.now(),
-                      //       'message': messageController.text,
-                      //       'type': 0
-                      //     },
-                      //   );
-                      // }).whenComplete(() {
-                      //   Fluttertoast.showToast(msg: 'Sent');
-                      // });
-                    },
-                    child: Icon(
-                      Icons.send,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    backgroundColor: Colors.blue,
-                    elevation: 0,
-                  ),
+                  // FloatingActionButton(
+                  //   onPressed: () async {
+                  //     sendChatMessage(messageController.text, 0, groupChatId!,
+                  //         currentUserId!, widget.user.docID.toString());
+                  //   },
+                  //   child: Icon(
+                  //     Icons.send,
+                  //     color: Colors.white,
+                  //     size: 18,
+                  //   ),
+                  //   backgroundColor: Colors.blue,
+                  //   elevation: 0,
+                  // ),
                 ],
               ),
             ),
@@ -335,7 +322,11 @@ class _ChatConversationState extends State<ChatConversation> {
     );
   }
 
+
+
   Widget buildListMessage() {
+
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('table-chat-conversation')
@@ -344,6 +335,7 @@ class _ChatConversationState extends State<ChatConversation> {
           .orderBy("dateCreated", descending: true)
           .snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+
         if (snapshot.hasData) {
           return ListView.builder(
               physics: const BouncingScrollPhysics(),
@@ -353,13 +345,11 @@ class _ChatConversationState extends State<ChatConversation> {
               itemBuilder: (context, index) {
                 final messageData = snapshot.data!.docs[index];
 
-                if (context.watch<AuthProvider>().getAppActive == false) {
-                  return Text("Encyrpted");
-                }
-
-                return Container(
+                if (context.watch<AuthProvider>().getAppActive == true &&  _isForeGround == true) {
+                  return  EncryptedChatMessage(messageData: messageData, user: widget.user);
+                }else{   return Container(
                   padding:
-                      EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 10),
+                  EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 10),
                   child: Align(
                     alignment: (messageData.get('idFrom') == user!.uid
                         ? Alignment.topRight
@@ -368,20 +358,20 @@ class _ChatConversationState extends State<ChatConversation> {
                       children: [
                         (messageData.get('idFrom') == user!.uid
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  user!.photoURL.toString(),
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              )
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            user!.photoURL.toString(),
+                            width: 20,
+                            height: 20,
+                          ),
+                        )
                             : ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  widget.user.imageUrl.toString(),
-                                  width: 20,
-                                  height: 20,
-                                ))),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              widget.user.imageUrl.toString(),
+                              width: 20,
+                              height: 20,
+                            ))),
                         Column(
                           children: [
                             Container(
@@ -404,14 +394,16 @@ class _ChatConversationState extends State<ChatConversation> {
                                     .millisecondsSinceEpoch,
                               ),
                               style:
-                                  TextStyle(fontSize: 10, color: Colors.grey),
+                              TextStyle(fontSize: 10, color: Colors.grey),
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                );
+                );}
+
+
               });
           //buildItem(index, snapshot.data?.docs[index]));
         } else {
@@ -508,8 +500,6 @@ class _ChatConversationState extends State<ChatConversation> {
   //     return const SizedBox.shrink();
   //   }
   // }
-
-
 
   Widget messageBubble(
       {required String chatContent,

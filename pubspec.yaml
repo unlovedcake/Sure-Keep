@@ -32,6 +32,11 @@ dependencies:
   flutter_contacts: ^1.1.5
   url_launcher: ^6.1.5
   telephony: ^0.2.0
+  randomstring_dart: ^0.0.1
+  splash_view: ^2.0.0
+  settings_ui: ^2.0.2
+  firebase_messaging: ^11.2.6
+  flutter_local_notifications: ^9.2.0
 
 
 dev_dependencies:
