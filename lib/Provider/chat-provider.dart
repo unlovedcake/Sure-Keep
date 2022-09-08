@@ -25,6 +25,38 @@ class ChatProvider extends ChangeNotifier {
 
   bool get getSend => isSend;
 
+  User? user = FirebaseAuth.instance.currentUser;
+
+  Stream<List<UserModel>> getUsers() {
+    return FirebaseFirestore.instance
+        .collection('table-user')
+        .where("chattingWith.chattingWith", isEqualTo: user!.email)
+        .snapshots()
+        .map((comments) {
+      return comments.docs.map((e) => UserModel.fromMap(e.data())).toList();
+    });
+  }
+
+  Stream<List<UserModel>> get list => getUsers();
+
+  late final List<UserModel> _myList;
+
+  List<UserModel> get myList => _myList;
+
+  void addToList(UserModel userModel) {}
+
+  getUsersss() async {
+    final QuerySnapshot result = await FirebaseFirestore.instance
+        .collection('table-user')
+        .where('chattingWith.chattingWith', isEqualTo: user!.email)
+        .get();
+    final List<DocumentSnapshot> document = result.docs;
+
+    for (int i = 0; i < document.length; i++) {
+      _myList.addAll(document[i]['firstName']);
+    }
+  }
+
   signInFakePassword(String email, String password, UserModel userModel,
       BuildContext context) async {
     try {
@@ -48,6 +80,7 @@ class ChatProvider extends ChangeNotifier {
       if (userData.fakePassword == password) {
         Navigator.pop(context);
         NavigateRoute.gotoPage(context, FakeConversation(user: userModel));
+        Navigator.pop(context);
       } else {
         await _auth
             .signInWithEmailAndPassword(email: email, password: password)

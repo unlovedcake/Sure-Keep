@@ -1,9 +1,14 @@
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,11 +96,74 @@ class _ChatConversationState extends State<ChatConversation> {
     }
   }
 
+  void loadFCM() async {
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+
+
+  void loadSend() async {
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+
+
+      bool isallowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isallowed) {
+        //no permission of local notification
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      } else {
+        if (notification != null && android != null && !kIsWeb) {
+
+
+          //show notification
+          AwesomeNotifications().createNotification(
+              content: NotificationContent( //simgple notification
+                id: 123,
+                channelKey: 'basic',
+                //set configuration wuth key "basic"
+                title: notification.title,
+                body: notification.body,
+                payload: {"name": "FlutterCampus"},
+                autoDismissible: false,
+                bigPicture: widget.user.imageUrl,
+                roundedBigPicture: true
+
+              ),
+
+              actionButtons: [
+                NotificationActionButton(
+                  key: "open",
+                  label: "Open File",
+                ),
+
+                NotificationActionButton(
+                  key: "delete",
+                  label: "Delete File",
+                )
+              ]
+          );
+        }
+      }
+
+    });
+
+
+  }
+
   @override
   void initState() {
     super.initState();
     isForeGround();
     read();
+
+    //loadFCM();
   }
 
   void sendChatMessage(String content, int type, String groupChatId,
@@ -127,6 +195,7 @@ class _ChatConversationState extends State<ChatConversation> {
         transaction.set(documentReference, conversation.toMap());
 
         sendPushMessage(widget.user.token.toString(), widget.user.firstName.toString(),content);
+        //loadSend();
 
       }).whenComplete(() {
         if (currentUserId == widget.user.docID.toString()) {
@@ -198,15 +267,12 @@ class _ChatConversationState extends State<ChatConversation> {
                       Text(
                         "Online",
                         style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 13),
+                            color: Colors.grey.shade600, fontSize: 10),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.settings,
-                  color: Colors.black54,
-                ),
+
               ],
             ),
           ),
@@ -267,6 +333,7 @@ class _ChatConversationState extends State<ChatConversation> {
                       decoration: InputDecoration(
                           suffixIcon: InkWell(
                               onTap: () {
+
 
                                 sendChatMessage(
                                     messageController.text,
@@ -355,6 +422,7 @@ class _ChatConversationState extends State<ChatConversation> {
                         ? Alignment.topRight
                         : Alignment.topLeft),
                     child: Wrap(
+                      spacing: 4,
                       children: [
                         (messageData.get('idFrom') == user!.uid
                             ? ClipRRect(
@@ -376,7 +444,11 @@ class _ChatConversationState extends State<ChatConversation> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(20)
+                                ,bottomLeft:  Radius.circular(20)),
+
+                                //borderRadius: BorderRadius.circular(20),
                                 color: (messageData.get('idFrom') == user!.uid
                                     ? Colors.grey.shade200
                                     : Colors.blue[200]),

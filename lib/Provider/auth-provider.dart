@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -118,7 +119,7 @@ class AuthProvider extends ChangeNotifier {
 
           Fluttertoast.showToast(
             timeInSecForIosWeb: 3,
-            msg: "Invalid-phone-number",
+            msg: e.message.toString(),
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.CENTER_RIGHT,
           );
@@ -256,7 +257,7 @@ class AuthProvider extends ChangeNotifier {
 
       userModel.docID = user!.uid;
 
-     // String phoneNum = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
+      String phoneNum = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
 
       userModel.phoneNumber = _phoneNumber;
       userModel.token = token;
@@ -387,8 +388,17 @@ class AuthProvider extends ChangeNotifier {
 
 
         if(document.isNotEmpty){
+
+          String? token = await FirebaseMessaging.instance.getToken();
+
+
           DocumentSnapshot documentSnapshot = document[0];
           UserModel userData =  UserModel.fromMap(documentSnapshot);
+
+          await FirebaseFirestore.instance
+              .collection("table-user")
+              .doc(userData.docID)
+              .update({'token':token });
           NavigateRoute.gotoPage(context, Home());
 
 
@@ -396,6 +406,7 @@ class AuthProvider extends ChangeNotifier {
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
           prefs.setString('email', email);
+
 
 
 

@@ -22,6 +22,8 @@ class _FakeConversationState extends State<FakeConversation> {
     ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
     ChatMessage(
         messageContent: "Is there any thing wrong?", messageType: "sender"),
+    ChatMessage(messageContent: "No, dont worry, I can handle this.", messageType: "receiver"),
+
   ];
 
   @override

@@ -38,7 +38,12 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
   @override
   Widget build(BuildContext context) {
  _phoneNumber =  context.watch<AuthProvider>().getPhoneNumber;
- String _otpCode =  Provider.of<AuthProvider>(context,listen: false).getOtpCode;
+
+
+
+ String otpCode =  Provider.of<AuthProvider>(context,listen: false).getOtpCode;
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -103,7 +108,7 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                _otpCode,
+                otpCode,
 
                 style: const TextStyle(
                   fontSize: 14,

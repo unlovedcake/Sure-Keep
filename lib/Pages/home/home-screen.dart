@@ -1,6 +1,6 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -18,9 +18,6 @@ import '../../Chat/person-who-chatted-you.dart';
 import '../../Models/user-model.dart';
 
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-   await Firebase.initializeApp();
-}
 class Home extends StatefulWidget {
   //final UserModel userData;
 
@@ -69,7 +66,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   void initState() {
 
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
     _pageController = PageController(initialPage: _selectedIndex);
     animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300));
@@ -99,7 +96,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     getLoggedInUser();
     loadFCM();
     listenFCM();
+
   }
+
+
+
 
   Future<Uint8List> _getByteArrayFromUrl(String url) async {
     final http.Response response = await http.get(Uri.parse(url));
@@ -133,8 +134,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             android: AndroidNotificationDetails(
               channel.id,
               channel.name,
-              // TODO add a proper drawable resource to android, for now using
-              //      one that already exists in example app.
               styleInformation: bigPictureStyleInformation,  // it will display the url image
               icon: 'img',
 
@@ -157,10 +156,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
       flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-      /// Create an Android Notification Channel.
-      ///
-      /// We use this channel in the `AndroidManifest.xml` file to override the
-      /// default FCM channel to enable heads up notifications.
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);

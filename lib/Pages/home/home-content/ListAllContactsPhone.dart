@@ -248,8 +248,10 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
                               }, child: Text('Connect',style: TextStyle(color: Colors.red),),)
                               : OutlinedButton(onPressed: (){
-                                telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
-                                    " https://www.facebook.com/kissiney.sweet ");
+                                _showAlertDialogInvite(contacts![index].name.first);
+
+                                // telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                                //     " https://www.facebook.com/kissiney.sweet ");
 
                               }, child: Text('Invite')),
 
@@ -273,4 +275,45 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                 ],
               ));
   }
+
+  _showAlertDialogInvite(String name){
+    showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'Invite Other',
+              style: TextStyle(fontSize: 18)
+            ),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+
+                  Text(
+                    'Would you like to invite $name to download this app ?',
+                    style: Theme.of(context).textTheme.bodyText1,
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+
+              TextButton(
+                child: const Text('No',style: TextStyle(color: Colors.red),),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: const Text('Yes'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+  });
+  }
+
 }
