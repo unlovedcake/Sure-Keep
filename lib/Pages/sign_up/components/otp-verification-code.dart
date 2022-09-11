@@ -25,20 +25,47 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
   String? _phoneNumber;
 
 
+  late String otpCode;
 
+  void otp()async{
 
+     otpCode =  Provider.of<AuthProvider>(context,listen: false).getOtpCode;
+
+    await Future.delayed(const Duration(milliseconds: 500)).then((value){
+      otpController1.text = otpCode[0];
+    });
+    await  Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      otpController2.text = otpCode[1];
+    });
+    await Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      otpController3.text = otpCode[2];
+    });
+    await Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      otpController4.text = otpCode[3];
+    });
+    await Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      otpController5.text = otpCode[4];
+    });
+    await Future.delayed(const Duration(milliseconds: 500)).then((value) {
+      otpController6.text = otpCode[5];
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-
 
   }
 
   @override
   Widget build(BuildContext context) {
  _phoneNumber =  context.watch<AuthProvider>().getPhoneNumber;
- String _otpCode =  Provider.of<AuthProvider>(context,listen: false).getOtpCode;
+
+
+ otp();
+
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -103,7 +130,7 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
                 textAlign: TextAlign.center,
               ),
               Text(
-                _otpCode,
+                otpCode,
 
                 style: const TextStyle(
                   fontSize: 14,

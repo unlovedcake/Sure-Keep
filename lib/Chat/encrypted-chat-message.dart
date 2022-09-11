@@ -105,14 +105,14 @@ class _EncryptedChatMessageState extends State<EncryptedChatMessage> {
                     ? Colors.grey.shade200
                     : Colors.blue[200]),
               ),
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: InkWell(
                 onDoubleTap: () {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text("Enter your password to encrypt"),
+                        title: const Text("Enter your password to decrypt"),
                         content: Form(
                           key: _formKey,
                           child: RectangularInputField(
@@ -139,6 +139,7 @@ class _EncryptedChatMessageState extends State<EncryptedChatMessage> {
                               if (_formKey.currentState!.validate()) {
 
                                 context.read<ChatProvider>().signInFakePassword(user!.email.toString(), passwordController.text,widget.user, context );
+
                               }
                               // Navigator.of(context).pop();
                             },

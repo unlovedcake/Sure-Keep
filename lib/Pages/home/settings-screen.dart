@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sure_keep/Chat/set-default-conversation.dart';
+import 'package:sure_keep/Router/navigate-route.dart';
 
 import '../../Provider/auth-provider.dart';
 
@@ -15,20 +17,20 @@ class AndroidSettingsScreen extends StatefulWidget {
 class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
   bool useNotificationDotOnAppIcon = true;
 
-  bool? _isForeGround;
+  bool? _isBackGround;
 
 
-  Future<bool?> isForeGround() async{
+  Future<bool?> isAppBackGround() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool? isForeGround = prefs.getBool('isBackGroundMode') ?? false;
-    _isForeGround = isForeGround;
+    bool? _isAppBackGround = prefs.getBool('isBackGroundMode') ?? false;
+    _isBackGround = _isAppBackGround;
 
-    return  _isForeGround;
+    return  _isBackGround;
   }
   @override
   void initState() {
 
-    isForeGround();
+    isAppBackGround();
     super.initState();
   }
 
@@ -50,11 +52,14 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
                 },
                 title: const Text('Encrypt Message'),
                 description:
-                    const Text('Control duration time for encrypted message'),
+                    const Text('Set duration time for encrypted message'),
               ),
               SettingsTile(
-                title: Text('Notification history'),
-                description: Text('Show recent and snoozed notifications'),
+                onPressed: (val){
+                  NavigateRoute.gotoPage(context, const SetDefaultConversation());
+                },
+                title: Text('Set Default Conversation'),
+                description: Text('Person you want to show your conversation'),
               ),
             ],
           ),
@@ -134,7 +139,7 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
 
   Future<int> getDuration() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? duration = prefs.getInt('duration') ?? 0;
+    int? duration = prefs.getInt('duration') ?? 30;
     return  duration;
 }
 
@@ -163,21 +168,39 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
               children: [
                 SwitchListTile(
                     title: Text('Encrypt Message'),
-                    value: _isForeGround ?? false,
+                    value: _isBackGround ?? false,
                     //value: context.watch<AuthProvider>().getBackGroundMode,
                     onChanged: (bool value) async{
                       SharedPreferences prefs = await SharedPreferences.getInstance();
                       setState(() {
                         //context.read<AuthProvider>().setBackGroundMode(value);
-                        isForeGround();
+                        isAppBackGround();
                         prefs.setBool('isBackGroundMode', value);
-                        prefs.setInt('duration', 0);
+                        //prefs.setInt('duration', 0);
 
                       });
+                      prefs.getBool('isBackGroundMode') == false ? prefs.setInt('duration', 0) : prefs.setInt('duration', 30);
                       print(value);
                     }),
                 Column(
                   children: [
+                    RadioListTile(
+                      title: const Text("30 seconds"),
+                      value: 30,
+                      groupValue: duration,
+                      onChanged: (value) async{
+                        SharedPreferences prefs = await SharedPreferences.getInstance();
+                        setState((){
+                          duration = int.parse(value.toString());
+
+                          prefs.setInt('duration', duration);
+
+
+                          print(duration);
+                        });
+                      },
+                    ),
+
                     RadioListTile(
                       title: Text("1 minute"),
                       value: 60,

@@ -50,7 +50,7 @@ class ProfileScreen extends StatelessWidget {
                    direction: Axis.vertical,
                    crossAxisAlignment: WrapCrossAlignment.center,
                    spacing: 6,
-                   children: [
+                   children: const [
                      Text("143"),
                      Text(
                        "Following",
@@ -63,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
                    direction: Axis.vertical,
                    crossAxisAlignment: WrapCrossAlignment.center,
                    spacing: 6,
-                   children: [
+                   children: const [
                      Text("143"),
                      Text(
                        "Followers",
@@ -76,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
                    direction: Axis.vertical,
                    crossAxisAlignment: WrapCrossAlignment.center,
                    spacing: 6,
-                   children: [
+                   children: const [
                      Text("143"),
                      Text(
                        "Like",
@@ -87,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                  ),
                ],
              ),
-             SizedBox(
+             const SizedBox(
                height: 20,
              ),
              Wrap(
@@ -95,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
                children: [
                  OutlinedButton(
                      onPressed: () {},
-                     child: Text(
+                     child: const Text(
                        "Edit",
                        style: TextStyle(fontSize: 15),
                      )),
@@ -104,7 +104,7 @@ class ProfileScreen extends StatelessWidget {
                      backgroundColor: Colors.black, //<-- SEE HERE
                    ),
                    onPressed: () {
-                     NavigateRoute.gotoPage(context,AndroidSettingsScreen());
+                     NavigateRoute.gotoPage(context,const AndroidSettingsScreen());
                    },
                    child: const Text(
                      'Settings',
@@ -113,7 +113,7 @@ class ProfileScreen extends StatelessWidget {
                  ),
                ],
              ),
-             SizedBox(
+             const SizedBox(
                height: 30,
              ),
              Wrap(

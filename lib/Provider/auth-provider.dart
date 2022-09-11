@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -28,7 +29,7 @@ class AuthProvider extends ChangeNotifier {
   String? userEmail;
   String verificationID = "";
   String _phoneNumber = "";
-  String _otpCode = "";
+  String _otpCode = "000000";
   String genderValue = "Man";
 
   bool isGenderMan = false;
@@ -84,6 +85,8 @@ class AuthProvider extends ChangeNotifier {
 
 
   Future<void> loginWithPhone(String phoneNumber, BuildContext context) async {
+
+    int? resendToken;
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -97,7 +100,6 @@ class AuthProvider extends ChangeNotifier {
       _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
-
 
           await _auth.signInWithCredential(credential).then((value){
 
@@ -118,7 +120,7 @@ class AuthProvider extends ChangeNotifier {
 
           Fluttertoast.showToast(
             timeInSecForIosWeb: 3,
-            msg: "Invalid-phone-number",
+            msg: e.message.toString(),
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.CENTER_RIGHT,
           );
@@ -143,11 +145,16 @@ class AuthProvider extends ChangeNotifier {
           print(e.toString());
 
         },
-        codeSent: (String verificationId, int? resendToken) {
+        forceResendingToken: resendToken,
+        codeSent: (String verificationId, int? resendTokens) {
 
 
           verificationID = verificationId;
           _phoneNumber = phoneNumber;
+
+          resendToken = resendTokens;
+          UserCredential? userCredential;
+          userCredential?.additionalUserInfo?.isNewUser;
 
           Navigator.pop(context);
           NavigateRoute.gotoPage(context, const OTPVerificationCode());
@@ -256,7 +263,7 @@ class AuthProvider extends ChangeNotifier {
 
       userModel.docID = user!.uid;
 
-     // String phoneNum = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
+      String phoneNum = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
 
       userModel.phoneNumber = _phoneNumber;
       userModel.token = token;
@@ -387,8 +394,17 @@ class AuthProvider extends ChangeNotifier {
 
 
         if(document.isNotEmpty){
+
+          String? token = await FirebaseMessaging.instance.getToken();
+
+
           DocumentSnapshot documentSnapshot = document[0];
           UserModel userData =  UserModel.fromMap(documentSnapshot);
+
+          await FirebaseFirestore.instance
+              .collection("table-user")
+              .doc(userData.docID)
+              .update({'token':token });
           NavigateRoute.gotoPage(context, Home());
 
 
@@ -396,6 +412,7 @@ class AuthProvider extends ChangeNotifier {
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
           prefs.setString('email', email);
+
 
 
 
