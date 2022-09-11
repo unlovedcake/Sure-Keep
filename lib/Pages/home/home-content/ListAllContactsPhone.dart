@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sure_keep/Chat/chatConversation.dart';
 import 'package:sure_keep/Models/user-model.dart';
 import 'package:sure_keep/Router/navigate-route.dart';
@@ -70,7 +71,6 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     if (await FlutterContacts.requestPermission()) {
       contacts = await FlutterContacts.getContacts(
           withProperties: true, withPhoto: true);
-     // print(contacts);
       setState(() {});
     }
   }
@@ -87,12 +87,9 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     });
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
+
   Future<void> initPlatformState() async {
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
+
 
     final bool? result = await telephony.requestPhoneAndSmsPermissions;
 
@@ -222,7 +219,10 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                           "  ${contacts![index].name.first} ${contacts![index].name.last}"),
+                                           "  ${contacts![index].name.first} ${contacts![index].name.last}",
+                                  style: GoogleFonts.lato(
+                                    textStyle: const TextStyle(color: Colors.blue, letterSpacing: .5),
+                                  ),),
                                 Text('  $num'),
                               ],
                             ),
@@ -246,12 +246,18 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                                 print(userModel);
                                 NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
 
-                              }, child: Text('Connect',style: TextStyle(color: Colors.red),),)
+                              }, child: Text('Connect',style: GoogleFonts.lato(
+                                textStyle: const TextStyle(color: Colors.red, letterSpacing: .5),
+                              )),)
                               : OutlinedButton(onPressed: (){
-                                telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
-                                    " https://www.facebook.com/kissiney.sweet ");
+                                _showAlertDialogInvite(contacts![index].name.first);
 
-                              }, child: Text('Invite')),
+                                // telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                                //     " https://www.facebook.com/kissiney.sweet ");
+
+                              }, child: Text('Invite',  style: GoogleFonts.lato(
+                              textStyle: const TextStyle(color: Colors.blue, letterSpacing: .5),
+                              ),)),
 
 
                               // OutlinedButton(onPressed: (){
@@ -273,4 +279,45 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                 ],
               ));
   }
+
+  _showAlertDialogInvite(String name){
+    showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'Invite Other',
+              style: TextStyle(fontSize: 18)
+            ),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+
+                  Text(
+                    'Would you like to invite $name to download this app ?',
+                    style: Theme.of(context).textTheme.bodyText1,
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+
+              TextButton(
+                child: const Text('No',style: TextStyle(color: Colors.red),),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: const Text('Yes'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+  });
+  }
+
 }

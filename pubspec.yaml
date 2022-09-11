@@ -35,14 +35,21 @@ dependencies:
   randomstring_dart: ^0.0.1
   splash_view: ^2.0.0
   settings_ui: ^2.0.2
-  firebase_messaging: ^11.2.6
+  firebase_messaging: ^13.0.0
   flutter_local_notifications: ^9.2.0
+  awesome_notifications: ^0.6.21
+  flutter_launcher_icons: ^0.10.0
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
+
+flutter_icons:
+  image_path: "assets/images/logo.png"
+  android: true
+  ios: true
 
   flutter_lints: ^2.0.0
 

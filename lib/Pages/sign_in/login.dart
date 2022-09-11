@@ -36,7 +36,7 @@ class _LoginState extends State<Login> {
                   painter: RPSCustomPainter(),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 16,
               ),
               Padding(
@@ -46,7 +46,7 @@ class _LoginState extends State<Login> {
                   children: [
                     IntlPhoneField(
                       cursorColor:Colors.blue,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         fillColor: Colors.white,
                         labelText: 'Phone Number',
                         labelStyle: TextStyle(color: Colors.black),

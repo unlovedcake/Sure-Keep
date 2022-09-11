@@ -58,7 +58,7 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
     User? user = FirebaseAuth.instance.currentUser;
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(top: 16, left: 16, right: 16),
+        padding: EdgeInsets.only(top: 16, left: 8, right: 8),
         child: Column(
           children: [
             InkWell(
@@ -66,7 +66,7 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
               child: Container(
                   height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Colors.grey[200],
                     borderRadius: BorderRadius.all(Radius.circular(10.0)),
                     // borderRadius:  BorderRadius.only(
                     //   topLeft: Radius.circular(40.0),
@@ -74,13 +74,11 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
                     // )
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(12.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: Image.network(user!.photoURL.toString())),
+                      children: const [
+
                         Spacer(),
                         Text("Search.."),
                         Spacer(),
@@ -135,27 +133,163 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
       if (userChat.docID == user!.uid) {
         return const SizedBox.shrink();
       } else {
-        return TextButton(
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ChatConversation(
-                          user: UserModel.fromMap(documentSnapshot),
-                        )));
-          },
-          child:  Container(
+        // return TextButton(
+        //   onPressed: () {
+        //     Navigator.push(
+        //         context,
+        //         MaterialPageRoute(
+        //             builder: (context) => ChatConversation(
+        //                   user: UserModel.fromMap(documentSnapshot),
+        //                 )));
+        //   },
+        //   child:  Wrap(
+        //     spacing: 6,
+        //     runSpacing: 4,
+        //     alignment: WrapAlignment.start,
+        //     crossAxisAlignment: WrapCrossAlignment.center,
+        //
+        //
+        //     children: [
+        //       documentSnapshot.get('imageUrl').isNotEmpty
+        //           ? ClipRRect(
+        //         borderRadius: BorderRadius.circular(30),
+        //         child: Image.network(
+        //           documentSnapshot.get('imageUrl'),
+        //           fit: BoxFit.cover,
+        //           width: 50,
+        //           height: 50,
+        //           loadingBuilder: (BuildContext ctx, Widget child,
+        //               ImageChunkEvent? loadingProgress) {
+        //             if (loadingProgress == null) {
+        //               return child;
+        //             } else {
+        //               return SizedBox(
+        //                 width: 50,
+        //                 height: 50,
+        //                 child: CircularProgressIndicator(
+        //                     color: Colors.grey,
+        //                     value: loadingProgress.expectedTotalBytes !=
+        //                         null
+        //                         ? loadingProgress.cumulativeBytesLoaded /
+        //                         loadingProgress.expectedTotalBytes!
+        //                         : null),
+        //               );
+        //             }
+        //           },
+        //           errorBuilder: (context, object, stackTrace) {
+        //             return const Icon(Icons.account_circle, size: 50);
+        //           },
+        //         ),
+        //       )
+        //           : const Icon(
+        //         Icons.account_circle,
+        //         size: 50,
+        //       ),
+        //       Column(
+        //       mainAxisAlignment: MainAxisAlignment.start,
+        //         crossAxisAlignment: CrossAxisAlignment.start,
+        //
+        //         children: [
+        //           Text(
+        //             documentSnapshot.get('firstName'),
+        //             style: const TextStyle(color: Colors.black),
+        //           ),
+        //           documentSnapshot.get('chattingWith')['chattingWith'] !=
+        //               user.email
+        //               ?  SizedBox(width: 160,)
+        //               : Container(
+        //             width: 110,
+        //                 child: Text(
+        //             documentSnapshot.get('chattingWith')['lastMessage'],
+        //                   maxLines: 2, overflow: TextOverflow.ellipsis,
+        //             style: const TextStyle(color: Colors.black,fontSize: 12),
+        //           ),
+        //               )
+        //         ],
+        //       ),
+        //    SizedBox(width: 100,),
+        //
+        //       Text(
+        //         documentSnapshot.get('chattingWith')['chattingWith'] != user.email
+        //             ? ""
+        //             : readTimestamp(documentSnapshot
+        //             .get('chattingWith')['dateLastMessage']
+        //             .millisecondsSinceEpoch),
+        //         style:  TextStyle(color: Colors.grey[500],fontSize: 12),
+        //       ),
+        //
+        //
+        //     ],
+        //   ),
+        //
+        //
+        //
+        //       // ListTile(
+        //       //   leading: documentSnapshot.get('imageUrl').isNotEmpty
+        //       //       ? ClipRRect(
+        //       //           borderRadius: BorderRadius.circular(30),
+        //       //           child: Image.network(
+        //       //             documentSnapshot.get('imageUrl'),
+        //       //             fit: BoxFit.cover,
+        //       //             width: 50,
+        //       //             height: 50,
+        //       //             loadingBuilder: (BuildContext ctx, Widget child,
+        //       //                 ImageChunkEvent? loadingProgress) {
+        //       //               if (loadingProgress == null) {
+        //       //                 return child;
+        //       //               } else {
+        //       //                 return SizedBox(
+        //       //                   width: 50,
+        //       //                   height: 50,
+        //       //                   child: CircularProgressIndicator(
+        //       //                       color: Colors.grey,
+        //       //                       value: loadingProgress.expectedTotalBytes !=
+        //       //                               null
+        //       //                           ? loadingProgress.cumulativeBytesLoaded /
+        //       //                               loadingProgress.expectedTotalBytes!
+        //       //                           : null),
+        //       //                 );
+        //       //               }
+        //       //             },
+        //       //             errorBuilder: (context, object, stackTrace) {
+        //       //               return const Icon(Icons.account_circle, size: 50);
+        //       //             },
+        //       //           ),
+        //       //         )
+        //       //       : const Icon(
+        //       //           Icons.account_circle,
+        //       //           size: 50,
+        //       //         ),
+        //       //   title: Column(
+        //       //     children: [
+        //       //       Text(
+        //       //         documentSnapshot.get('firstName'),
+        //       //         style: const TextStyle(color: Colors.black),
+        //       //       ),
+        //       //       documentSnapshot.get('chattingWith')['chattingWith'] !=
+        //       //               user.email
+        //       //           ? SizedBox.shrink()
+        //       //           : Text(
+        //       //               documentSnapshot.get('chattingWith')['lastMessage'],
+        //       //               style: const TextStyle(color: Colors.black),
+        //       //             )
+        //       //     ],
+        //       //   ),
+        //       //   trailing: Text(
+        //       //     documentSnapshot.get('chattingWith')['chattingWith'] != user.email
+        //       //         ? ""
+        //       //         : readTimestamp(documentSnapshot
+        //       //             .get('chattingWith')['dateLastMessage']
+        //       //             .millisecondsSinceEpoch),
+        //       //     style: const TextStyle(color: Colors.black),
+        //       //   ),
+        //       // ),
+        //
+        // );
 
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              alignment: WrapAlignment.start,
-              crossAxisAlignment: WrapCrossAlignment.center,
-
-
-              children: [
-                documentSnapshot.get('imageUrl').isNotEmpty
-                    ? ClipRRect(
+        return ListTile(
+          leading: documentSnapshot.get('imageUrl').isNotEmpty
+              ? ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: Image.network(
                     documentSnapshot.get('imageUrl'),
@@ -172,11 +306,14 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
                           height: 50,
                           child: CircularProgressIndicator(
                               color: Colors.grey,
-                              value: loadingProgress.expectedTotalBytes !=
-                                  null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                                  : null),
+                              value:
+                                  loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress
+                                              .cumulativeBytesLoaded /
+                                          loadingProgress
+                                              .expectedTotalBytes!
+                                      : null),
                         );
                       }
                     },
@@ -185,113 +322,42 @@ class _PersonWhoChattedYouState extends State<PersonWhoChattedYou>
                     },
                   ),
                 )
-                    : const Icon(
+              : const Icon(
                   Icons.account_circle,
                   size: 50,
                 ),
-                Wrap(
-                  direction: Axis.vertical,
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.start,
-
-
-                  children: [
-                    Text(
-                      documentSnapshot.get('firstName'),
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                    documentSnapshot.get('chattingWith')['chattingWith'] !=
-                        user.email
-                        ?  SizedBox(width: 160,)
-                        : Container(
-                      width: 110,
-                          child: Text(
-                      documentSnapshot.get('chattingWith')['lastMessage'],
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black,fontSize: 12),
-                    ),
-                        )
-                  ],
-                ),
-             SizedBox(width: 100,),
-
-                Text(
-                  documentSnapshot.get('chattingWith')['chattingWith'] != user.email
-                      ? ""
-                      : readTimestamp(documentSnapshot
-                      .get('chattingWith')['dateLastMessage']
-                      .millisecondsSinceEpoch),
-                  style:  TextStyle(color: Colors.grey[500],fontSize: 12),
-                ),
-
-
-              ],
-            ),
+          title: Text(
+            documentSnapshot.get('firstName'),
+            style: const TextStyle(color: Colors.black),
           ),
+          trailing: Text(
+            documentSnapshot.get('chattingWith')['chattingWith'] !=
+                    user.email
+                ? ""
+                : readTimestamp(documentSnapshot
+                    .get('chattingWith')['dateLastMessage']
+                    .millisecondsSinceEpoch),
+            style: const TextStyle(color: Colors.grey),
+          ),
+          subtitle: documentSnapshot
+                      .get('chattingWith')['chattingWith'] !=
+                  user.email
+              ? SizedBox.shrink()
+              : Text(
+                  documentSnapshot.get('chattingWith')['lastMessage'],
+            maxLines: 4, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.blue),
+                ),
+          selected: true,
+          onTap: () {
 
-
-
-              // ListTile(
-              //   leading: documentSnapshot.get('imageUrl').isNotEmpty
-              //       ? ClipRRect(
-              //           borderRadius: BorderRadius.circular(30),
-              //           child: Image.network(
-              //             documentSnapshot.get('imageUrl'),
-              //             fit: BoxFit.cover,
-              //             width: 50,
-              //             height: 50,
-              //             loadingBuilder: (BuildContext ctx, Widget child,
-              //                 ImageChunkEvent? loadingProgress) {
-              //               if (loadingProgress == null) {
-              //                 return child;
-              //               } else {
-              //                 return SizedBox(
-              //                   width: 50,
-              //                   height: 50,
-              //                   child: CircularProgressIndicator(
-              //                       color: Colors.grey,
-              //                       value: loadingProgress.expectedTotalBytes !=
-              //                               null
-              //                           ? loadingProgress.cumulativeBytesLoaded /
-              //                               loadingProgress.expectedTotalBytes!
-              //                           : null),
-              //                 );
-              //               }
-              //             },
-              //             errorBuilder: (context, object, stackTrace) {
-              //               return const Icon(Icons.account_circle, size: 50);
-              //             },
-              //           ),
-              //         )
-              //       : const Icon(
-              //           Icons.account_circle,
-              //           size: 50,
-              //         ),
-              //   title: Column(
-              //     children: [
-              //       Text(
-              //         documentSnapshot.get('firstName'),
-              //         style: const TextStyle(color: Colors.black),
-              //       ),
-              //       documentSnapshot.get('chattingWith')['chattingWith'] !=
-              //               user.email
-              //           ? SizedBox.shrink()
-              //           : Text(
-              //               documentSnapshot.get('chattingWith')['lastMessage'],
-              //               style: const TextStyle(color: Colors.black),
-              //             )
-              //     ],
-              //   ),
-              //   trailing: Text(
-              //     documentSnapshot.get('chattingWith')['chattingWith'] != user.email
-              //         ? ""
-              //         : readTimestamp(documentSnapshot
-              //             .get('chattingWith')['dateLastMessage']
-              //             .millisecondsSinceEpoch),
-              //     style: const TextStyle(color: Colors.black),
-              //   ),
-              // ),
-
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ChatConversation(
+                              user: UserModel.fromMap(documentSnapshot),
+                            )));
+          },
         );
       }
     } else {

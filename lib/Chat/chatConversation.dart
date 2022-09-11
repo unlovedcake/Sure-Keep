@@ -1,9 +1,14 @@
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,11 +96,74 @@ class _ChatConversationState extends State<ChatConversation> {
     }
   }
 
+  void loadFCM() async {
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+
+
+  void loadSend() async {
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+
+
+      bool isallowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isallowed) {
+        //no permission of local notification
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      } else {
+        if (notification != null && android != null && !kIsWeb) {
+
+
+          //show notification
+          AwesomeNotifications().createNotification(
+              content: NotificationContent( //simgple notification
+                id: 123,
+                channelKey: 'basic',
+                //set configuration wuth key "basic"
+                title: notification.title,
+                body: notification.body,
+                payload: {"name": "FlutterCampus"},
+                autoDismissible: false,
+                bigPicture: widget.user.imageUrl,
+                roundedBigPicture: true
+
+              ),
+
+              actionButtons: [
+                NotificationActionButton(
+                  key: "open",
+                  label: "Open File",
+                ),
+
+                NotificationActionButton(
+                  key: "delete",
+                  label: "Delete File",
+                )
+              ]
+          );
+        }
+      }
+
+    });
+
+
+  }
+
   @override
   void initState() {
     super.initState();
     isForeGround();
     read();
+
+    //loadFCM();
   }
 
   void sendChatMessage(String content, int type, String groupChatId,
@@ -127,6 +195,7 @@ class _ChatConversationState extends State<ChatConversation> {
         transaction.set(documentReference, conversation.toMap());
 
         sendPushMessage(widget.user.token.toString(), widget.user.firstName.toString(),content);
+        //loadSend();
 
       }).whenComplete(() {
         if (currentUserId == widget.user.docID.toString()) {
@@ -154,61 +223,51 @@ class _ChatConversationState extends State<ChatConversation> {
     print("Build");
     return Scaffold(
       appBar: AppBar(
+
         elevation: 0,
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         flexibleSpace: SafeArea(
-          child: Container(
-            padding: EdgeInsets.only(right: 16),
-            child: Row(
-              children: <Widget>[
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                  ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.black,
                 ),
-                SizedBox(
-                  width: 2,
+              ),
+              Spacer(),
+              CircleAvatar(
+                backgroundImage:
+                    NetworkImage(widget.user.imageUrl.toString()),
+                maxRadius: 20,
+              ),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      " ${widget.user.firstName}",
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+
+                    Text(
+                      "  Online",
+                      style: TextStyle(
+                          color: Colors.grey.shade600, fontSize: 10),
+                    ),
+                  ],
                 ),
-                CircleAvatar(
-                  backgroundImage:
-                      NetworkImage(widget.user.imageUrl.toString()),
-                  maxRadius: 20,
-                ),
-                SizedBox(
-                  width: 12,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        "${widget.user.firstName}",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                      SizedBox(
-                        height: 6,
-                      ),
-                      Text(
-                        "Online",
-                        style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.settings,
-                  color: Colors.black54,
-                ),
-              ],
-            ),
+              ),
+              const Spacer(),
+            ],
           ),
         ),
       ),
@@ -219,7 +278,7 @@ class _ChatConversationState extends State<ChatConversation> {
           Align(
             alignment: Alignment.bottomLeft,
             child: Container(
-              padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
+              padding: const EdgeInsets.only(left: 10, bottom: 10, top: 10),
               height: 80,
               width: double.infinity,
               color: Colors.white,
@@ -234,14 +293,14 @@ class _ChatConversationState extends State<ChatConversation> {
                         color: Colors.lightBlue,
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.add,
                         color: Colors.white,
                         size: 20,
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 15,
                   ),
                   Expanded(
@@ -267,6 +326,7 @@ class _ChatConversationState extends State<ChatConversation> {
                       decoration: InputDecoration(
                           suffixIcon: InkWell(
                               onTap: () {
+
 
                                 sendChatMessage(
                                     messageController.text,
@@ -325,7 +385,7 @@ class _ChatConversationState extends State<ChatConversation> {
 
 
   Widget buildListMessage() {
-
+    final size = MediaQuery.of(context).size;
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -349,22 +409,16 @@ class _ChatConversationState extends State<ChatConversation> {
                   return  EncryptedChatMessage(messageData: messageData, user: widget.user);
                 }else{   return Container(
                   padding:
-                  EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 10),
+                  const EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 10),
                   child: Align(
                     alignment: (messageData.get('idFrom') == user!.uid
                         ? Alignment.topRight
                         : Alignment.topLeft),
                     child: Wrap(
+                              spacing: 6,
                       children: [
                         (messageData.get('idFrom') == user!.uid
-                            ? ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            user!.photoURL.toString(),
-                            width: 20,
-                            height: 20,
-                          ),
-                        )
+                            ? const SizedBox.shrink()
                             : ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: Image.network(
@@ -374,19 +428,45 @@ class _ChatConversationState extends State<ChatConversation> {
                             ))),
                         Column(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: (messageData.get('idFrom') == user!.uid
-                                    ? Colors.grey.shade200
-                                    : Colors.blue[200]),
-                              ),
-                              padding: EdgeInsets.all(16),
-                              child: Text(
-                                messageData.get('message'),
-                                style: TextStyle(fontSize: 15),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(minWidth: 40, maxWidth: 250),
+                              child:
+
+                              messageData.get('idFrom') == user!.uid ? Container(
+
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20)
+                                      ,bottomRight:  Radius.circular(20)
+                                      ,bottomLeft:  Radius.circular(20)),
+
+                                  color:  Colors.grey.shade200
+
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  messageData.get('message'),
+
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                              ) : Container(
+
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                      topRight: Radius.circular(20)
+                                      ,bottomRight:  Radius.circular(20)
+                                      ,bottomLeft:  Radius.circular(20)),
+                                  color: Colors.blue[200],
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  messageData.get('message'),
+
+                                  style: const TextStyle(fontSize: 15),
+                                ),
                               ),
                             ),
+                            const SizedBox(height: 4,),
                             Text(
                               readTimestamp(
                                 messageData
@@ -394,10 +474,20 @@ class _ChatConversationState extends State<ChatConversation> {
                                     .millisecondsSinceEpoch,
                               ),
                               style:
-                              TextStyle(fontSize: 10, color: Colors.grey),
+                              const TextStyle(fontSize: 10, color: Colors.grey),
                             ),
                           ],
                         ),
+
+                        messageData.get('idFrom') == user!.uid ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            user!.photoURL.toString(),
+                            width: 20,
+                            height: 20,
+                          ),
+                        ) : SizedBox.shrink(),
+
                       ],
                     ),
                   ),

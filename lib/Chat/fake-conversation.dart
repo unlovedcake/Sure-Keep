@@ -1,33 +1,210 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:math';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sure_keep/All-Constants/all_constants.dart';
+import 'package:sure_keep/Provider/chat-provider.dart';
+import '../Models/conversation.dart';
 import '../Models/user-model.dart';
+import '../Provider/auth-provider.dart';
+import '../Utensils/read_timestamp.dart';
+import 'encrypted-chat-message.dart';
+import 'package:http/http.dart' as http;
 
 class FakeConversation extends StatefulWidget {
-
   final UserModel user;
-  const FakeConversation({required this.user,Key? key}) : super(key: key);
+
+  final UserModel userNameAndImage;
+
+  const FakeConversation({Key? key, required this.user,required this.userNameAndImage}) : super(key: key);
 
   @override
   State<FakeConversation> createState() => _FakeConversationState();
 }
 
 class _FakeConversationState extends State<FakeConversation> {
-  List<ChatMessage> messages = [
-    ChatMessage(messageContent: "Hello,", messageType: "receiver"),
-    ChatMessage(messageContent: "How have you been?", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Hey , I am doing fine dude. wbu?",
-        messageType: "sender"),
-    ChatMessage(messageContent: "ehhhh, doing OK.", messageType: "receiver"),
-    ChatMessage(
-        messageContent: "Is there any thing wrong?", messageType: "sender"),
-  ];
+  TextEditingController messageController = TextEditingController();
+
+  User? user = FirebaseAuth.instance.currentUser;
+
+  String? currentUserId;
+  String? groupChatId;
+
+  bool? _isForeGround;
+
+  Future<bool?> isForeGround() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isForeGround = prefs.getBool('isBackGroundMode') ?? false;
+    _isForeGround = isForeGround;
+
+    return _isForeGround;
+  }
+
+  void read() {
+    currentUserId = user!.uid;
+
+    if (currentUserId!.compareTo(widget.user.docID.toString()) > 0) {
+      groupChatId = '$currentUserId-${widget.user.docID.toString()}';
+    } else {
+      groupChatId = '${widget.user.docID.toString()}-$currentUserId';
+    }
+  }
+
+  Future<void> updateDataFirestore(String collectionPath, String docPath,
+      Map<String, Object> dataNeedUpdate) {
+    return FirebaseFirestore.instance
+        .collection(collectionPath)
+        .doc(docPath)
+        .update(dataNeedUpdate)
+        .whenComplete(() => messageController.text = "");
+  }
+
+  void sendPushMessage(String token, String title, String body) async {
+    try {
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+              'key=AAAA46pw8dw:APA91bH16DQMBlHChehqWl-REs6Y4pkEVqOTtME1yRgGvN-8yrQcy5uwzXDW_HbR_jK2o_sGwjTo-rWKVXkbz62nMKJN3lqrhWCrkxMN7XG4D32V3utQlgHLUvmwhAdIgnVDIkOLJRCJ',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{'body': body, 'title': title},
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'id': '1',
+              'status': 'done'
+            },
+            "to": token,
+          },
+        ),
+      );
+    } catch (e) {
+      print("error push notification");
+    }
+  }
+
+  void loadFCM() async {
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+  void loadSend() async {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+      bool isallowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isallowed) {
+        //no permission of local notification
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      } else {
+        if (notification != null && android != null && !kIsWeb) {
+          //show notification
+          AwesomeNotifications().createNotification(
+              content: NotificationContent(
+                  //simgple notification
+                  id: 123,
+                  channelKey: 'basic',
+                  //set configuration wuth key "basic"
+                  title: notification.title,
+                  body: notification.body,
+                  payload: {"name": "FlutterCampus"},
+                  autoDismissible: false,
+                  bigPicture: widget.user.imageUrl,
+                  roundedBigPicture: true),
+              actionButtons: [
+                NotificationActionButton(
+                  key: "open",
+                  label: "Open File",
+                ),
+                NotificationActionButton(
+                  key: "delete",
+                  label: "Delete File",
+                )
+              ]);
+        }
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    isForeGround();
+    read();
+
+    //loadFCM();
+  }
+
+  void sendChatMessage(String content, int type, String groupChatId,
+      String currentUserId, String peerId) {
+    if (content.trim() == "") {
+      Fluttertoast.showToast(
+        timeInSecForIosWeb: 3,
+        msg: "Enter Text Message",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER_RIGHT,
+      );
+    } else {
+      DocumentReference documentReference = FirebaseFirestore.instance
+          .collection('table-chat-conversation')
+          .doc(groupChatId)
+          .collection(groupChatId)
+          .doc(DateTime.now().millisecondsSinceEpoch.toString());
+
+      Conversation conversation = Conversation()
+        ..idTo = peerId
+        ..idFrom = currentUserId
+        ..messageText = content
+        ..dateCreated = DateTime.now()
+        ..type = type;
+
+      FirebaseFirestore.instance.runTransaction((transaction) async {
+        transaction.set(documentReference, conversation.toMap());
+
+        sendPushMessage(widget.user.token.toString(),
+            widget.user.firstName.toString(), content);
+        //loadSend();
+      }).whenComplete(() {
+        if (currentUserId == widget.user.docID.toString()) {
+          return;
+        }
+        updateDataFirestore(
+          'table-user',
+          currentUserId,
+          {
+            'chattingWith': {
+              'chattingWith': widget.user.email,
+              'lastMessage': messageController.text,
+              "dateLastMessage": DateTime.now(),
+            }
+          },
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    print("Build");
     return Scaffold(
-
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -51,7 +228,7 @@ class _FakeConversationState extends State<FakeConversation> {
                 ),
                 CircleAvatar(
                   backgroundImage:
-                  NetworkImage(widget.user.imageUrl.toString()),
+                      NetworkImage(widget.userNameAndImage.imageUrl.toString()),
                   maxRadius: 20,
                 ),
                 SizedBox(
@@ -63,7 +240,7 @@ class _FakeConversationState extends State<FakeConversation> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        "${widget.user.firstName}",
+                        "${widget.userNameAndImage.firstName}",
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       ),
@@ -73,14 +250,10 @@ class _FakeConversationState extends State<FakeConversation> {
                       Text(
                         "Online",
                         style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 13),
+                            color: Colors.grey.shade600, fontSize: 10),
                       ),
                     ],
                   ),
-                ),
-                Icon(
-                  Icons.settings,
-                  color: Colors.black54,
                 ),
               ],
             ),
@@ -88,39 +261,8 @@ class _FakeConversationState extends State<FakeConversation> {
         ),
       ),
       body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: true,
-              itemCount: messages.length,
-              shrinkWrap: true,
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              physics: NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                return Container(
-                  padding: EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
-                  child: Align(
-                    alignment: (messages[index].messageType == "receiver"
-                        ? Alignment.topLeft
-                        : Alignment.topRight),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: (messages[index].messageType == "receiver"
-                            ? Colors.grey.shade200
-                            : Colors.blue[200]),
-                      ),
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        messages[index].messageContent,
-                        style: TextStyle(fontSize: 15),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+        children: <Widget>[
+          Expanded(child: buildListMessage()),
           Align(
             alignment: Alignment.bottomLeft,
             child: Container(
@@ -151,7 +293,7 @@ class _FakeConversationState extends State<FakeConversation> {
                   ),
                   Expanded(
                     child: TextFormField(
-
+                      controller: messageController,
                       autofocus: false,
                       autocorrect: false,
                       keyboardType: TextInputType.multiline,
@@ -167,12 +309,24 @@ class _FakeConversationState extends State<FakeConversation> {
                       //   context.read<ChatProvider>().setSend(false);
                       // }
 
-
                       //},
                       decoration: InputDecoration(
-                        suffixIcon:   Icon(Icons.send,color: Colors.grey,),
-                        // suffixIcon:  context.watch<ChatProvider>().getSend == false ? InkWell(
+                        suffixIcon: InkWell(
+                            onTap: () {
+                              sendChatMessage(
+                                  messageController.text,
+                                  0,
+                                  groupChatId!,
+                                  currentUserId!,
+                                  widget.user.docID.toString());
+                            },
+                            child: Icon(
+                              Icons.send,
+                              color: AppColors.logoColor,
+                            )),
+                        // suffixIcon: context.watch<AuthProvider>().getAppActive != false ? InkWell(
                         //     onTap: () {
+                        //
                         //       sendChatMessage(
                         //           messageController.text,
                         //           0,
@@ -180,7 +334,8 @@ class _FakeConversationState extends State<FakeConversation> {
                         //           currentUserId!,
                         //           widget.user.docID.toString());
                         //     },
-                        //     child: Icon(Icons.send,color: AppColors.logoColor,)) : Icon(Icons.send,color: Colors.grey,),
+                        //     child: Icon(Icons.send,color: AppColors.logoColor,)) :  Icon(Icons.send,color: Colors.grey,),
+
                         hintText: "   Write Comment",
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         border: OutlineInputBorder(
@@ -212,7 +367,201 @@ class _FakeConversationState extends State<FakeConversation> {
           ),
         ],
       ),
+    );
+  }
 
+  Widget buildListMessage() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('table-chat-conversation')
+          .doc(groupChatId)
+          .collection(groupChatId!)
+          .orderBy("dateCreated", descending: true)
+          .snapshots(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasData) {
+          return ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(10),
+              itemCount: snapshot.data?.docs.length,
+              reverse: true,
+              itemBuilder: (context, index) {
+                final messageData = snapshot.data!.docs[index];
+
+                return Container(
+                  padding:
+                      EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 10),
+                  child: Align(
+                    alignment: (messageData.get('idFrom') == user!.uid
+                        ? Alignment.topRight
+                        : Alignment.topLeft),
+                    child: Wrap(
+                      spacing: 4,
+                      children: [
+                        (messageData.get('idFrom') == user!.uid
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  user!.photoURL.toString(),
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  widget.user.imageUrl.toString(),
+                                  width: 20,
+                                  height: 20,
+                                ))),
+                        Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(20)),
+
+                                //borderRadius: BorderRadius.circular(20),
+                                color: (messageData.get('idFrom') == user!.uid
+                                    ? Colors.grey.shade200
+                                    : Colors.blue[200]),
+                              ),
+                              padding: EdgeInsets.all(16),
+                              child: Text(
+                                messageData.get('message'),
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            ),
+                            Text(
+                              readTimestamp(
+                                messageData
+                                    .get('dateCreated')
+                                    .millisecondsSinceEpoch,
+                              ),
+                              style:
+                                  TextStyle(fontSize: 10, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              });
+          //buildItem(index, snapshot.data?.docs[index]));
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+    );
+  }
+
+  // Widget buildItem(int index, DocumentSnapshot? documentSnapshot) {
+  //   if (documentSnapshot != null) {
+  //     ChatMessages chatMessages = ChatMessages.fromDocument(documentSnapshot);
+  //     if (chatMessages.idFrom == user!.uid) {
+  //       // right side (my message)
+  //       return Column(
+  //         crossAxisAlignment: CrossAxisAlignment.end,
+  //         children: [
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.end,
+  //             children: [
+  //               chatMessages.type == 0
+  //                   ? messageBubble(
+  //                 chatContent: chatMessages.content,
+  //                 color: Colors.blueGrey,
+  //                 textColor: Colors.white,
+  //                 margin: const EdgeInsets.only(right: 10),
+  //               )
+  //
+  //                   : const SizedBox.shrink(),
+  //                Container(
+  //                 clipBehavior: Clip.hardEdge,
+  //                 decoration: BoxDecoration(
+  //                   borderRadius: BorderRadius.circular(20),
+  //                 ),
+  //                 child: Image.network(
+  //                   "https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000",
+  //                   width: 40,
+  //                   height:40,
+  //                   fit: BoxFit.cover,
+  //                   loadingBuilder: (BuildContext ctx, Widget child,
+  //                       ImageChunkEvent? loadingProgress) {
+  //                     if (loadingProgress == null) return child;
+  //                     return Center(
+  //                       child: CircularProgressIndicator(
+  //                         color: Colors.grey,
+  //                         value: loadingProgress.expectedTotalBytes !=
+  //                             null &&
+  //                             loadingProgress.expectedTotalBytes !=
+  //                                 null
+  //                             ? loadingProgress.cumulativeBytesLoaded /
+  //                             loadingProgress.expectedTotalBytes!
+  //                             : null,
+  //                       ),
+  //                     );
+  //                   },
+  //                   errorBuilder: (context, object, stackTrace) {
+  //                     return const Icon(
+  //                       Icons.account_circle,
+  //                       size: 35,
+  //                       color: Colors.grey,
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //
+  //             ],
+  //           ),
+  //          Container(
+  //             margin: const EdgeInsets.only(
+  //                 right: 50,
+  //                 top: 6,
+  //                 bottom: 8),
+  //             child: Text(
+  //               DateFormat('dd MMM yyyy, hh:mm a').format(
+  //                 DateTime.fromMillisecondsSinceEpoch(
+  //                   int.parse(chatMessages.timestamp),
+  //                 ),
+  //               ),
+  //               style: const TextStyle(
+  //                   color: Colors.grey,
+  //                   fontSize: 12,
+  //                   fontStyle: FontStyle.italic),
+  //             ),
+  //           ),
+  //
+  //         ],
+  //       );
+  //     }else{
+  //       return Text("No Data");
+  //     }
+  //   } else {
+  //     return const SizedBox.shrink();
+  //   }
+  // }
+
+  Widget messageBubble(
+      {required String chatContent,
+      required EdgeInsetsGeometry? margin,
+      Color? color,
+      Color? textColor}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      margin: margin,
+      width: 200,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        chatContent,
+        style: TextStyle(fontSize: 16, color: textColor),
+      ),
     );
   }
 }
@@ -223,3 +572,22 @@ class ChatMessage {
 
   ChatMessage({required this.messageContent, required this.messageType});
 }
+
+class ChatPageArguments {
+  final String peerId;
+  final String peerAvatar;
+  final String peerNickname;
+
+  ChatPageArguments(
+      {required this.peerId,
+      required this.peerAvatar,
+      required this.peerNickname});
+}
+
+class MessageType {
+  static const text = 0;
+  static const image = 1;
+  static const sticker = 2;
+}
+
+
