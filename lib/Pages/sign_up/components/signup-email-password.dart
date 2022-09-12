@@ -68,6 +68,7 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
 
 
             RectangularInputField(
+              sufixIcon: null,
               controller: emailController,
               textInputType: TextInputType.emailAddress,
               hintText: 'Email',
@@ -84,6 +85,7 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
               },
             ),
             RectangularInputField(
+              sufixIcon: null,
               controller: passwordController,
               textInputType: TextInputType.text,
               hintText: 'Password',
@@ -100,6 +102,7 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
               },
             ),
             RectangularInputField(
+              sufixIcon: null,
               controller: fakeController,
               textInputType: TextInputType.text,
               hintText: 'Fake Password',

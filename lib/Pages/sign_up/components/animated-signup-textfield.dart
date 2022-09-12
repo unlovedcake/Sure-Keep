@@ -68,6 +68,7 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
 
             children: [
               RectangularInputField(
+                sufixIcon: null,
                 controller: firstNameController,
                 textInputType: TextInputType.text,
                 hintText: 'First Name',
@@ -84,6 +85,7 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
                 },
               ),
               RectangularInputField(
+                sufixIcon: null,
                 controller: lastNameController,
                 textInputType: TextInputType.text,
                 hintText: 'Last Name',

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,6 +34,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
 
   List<String> phoneNumber = [];
+
+  final _random = Random();
 
   getUsers()async {
     final QuerySnapshot result = await FirebaseFirestore.instance
@@ -207,9 +210,11 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
                             children: [
                               (contacts![index].photo == null)
-                                  ? const CircleAvatar(
+                                  ? CircleAvatar(
+                                backgroundColor:  Colors.primaries[_random.nextInt(Colors.primaries.length)]
+                            [_random.nextInt(9) * 100],
                                   radius: 30,
-                                      child: Icon(Icons.person))
+                                      child: Icon(Icons.person,))
                                   : CircleAvatar(
                                 radius: 30,
                                       backgroundImage: MemoryImage(image!)),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sure_keep/All-Constants/all_constants.dart';
@@ -241,11 +243,24 @@ class _ChatConversationState extends State<ChatConversation> {
                 ),
               ),
               Spacer(),
-              CircleAvatar(
-                backgroundImage:
-                    NetworkImage(widget.user.imageUrl.toString()),
-                maxRadius: 20,
+
+              Hero(
+                tag:  widget.user.docID.toString(),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.user.imageUrl.toString(),
+                    width: 40.0,
+                    height: 40.0,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
+              // CircleAvatar(
+              //   backgroundImage:
+              //       NetworkImage(widget.user.imageUrl.toString()),
+              //   maxRadius: 20,
+              // ),
 
               Expanded(
                 child: Column(
@@ -254,15 +269,16 @@ class _ChatConversationState extends State<ChatConversation> {
                   children: <Widget>[
                     Text(
                       " ${widget.user.firstName}",
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.chakraPetch(
+                textStyle: const TextStyle(color: AppColors.logoColor, letterSpacing: 2,fontSize: 16,fontWeight: FontWeight.bold),
+              ),
                     ),
 
-                    Text(
-                      "  Online",
-                      style: TextStyle(
-                          color: Colors.grey.shade600, fontSize: 10),
-                    ),
+                    // Text(
+                    //   "  Online",
+                    //   style: TextStyle(
+                    //       color: Colors.grey.shade600, fontSize: 10),
+                    // ),
                   ],
                 ),
               ),
@@ -421,11 +437,14 @@ class _ChatConversationState extends State<ChatConversation> {
                             ? const SizedBox.shrink()
                             : ClipRRect(
                             borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              widget.user.imageUrl.toString(),
-                              width: 20,
-                              height: 20,
-                            ))),
+                            child:CachedNetworkImage(
+                              imageUrl: widget.user.imageUrl.toString(),
+                              width: 20.0,
+                              height: 20.0,
+                              fit: BoxFit.cover,
+                            ),)),
+
+
                         Column(
                           children: [
                             ConstrainedBox(
@@ -481,11 +500,14 @@ class _ChatConversationState extends State<ChatConversation> {
 
                         messageData.get('idFrom') == user!.uid ? ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            user!.photoURL.toString(),
-                            width: 20,
-                            height: 20,
+                          child:CachedNetworkImage(
+                            imageUrl: user!.photoURL.toString(),
+                            width: 20.0,
+                            height: 20.0,
+                            fit: BoxFit.cover,
                           ),
+
+
                         ) : SizedBox.shrink(),
 
                       ],

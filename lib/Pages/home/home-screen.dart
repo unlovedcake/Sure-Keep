@@ -10,14 +10,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:sure_keep/All-Constants/all_constants.dart';
 import 'package:sure_keep/Pages/home/home-content/ListAllContactsPhone.dart';
-import 'package:sure_keep/Pages/home/profile-screen.dart';
+import 'package:sure_keep/Pages/Profile/profile-screen.dart';
 import 'package:sure_keep/Provider/auth-provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:sure_keep/Router/navigate-route.dart';
 import '../../Chat/person-who-chatted-you.dart';
 import '../../Models/user-model.dart';
+import '../search-user/search-user-screen.dart';
 
 
 class Home extends StatefulWidget {
@@ -184,47 +187,66 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         future: getLoggedInUser(),
         builder: (context, snapshot) {
           return Scaffold(
+
             appBar: AppBar(
-              title: Column(
+                backgroundColor: Colors.transparent,
+              title: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text(
-                    _selectedIndex == 1
-                        ? "Search"
-                        : _selectedIndex == 2
-                            ? "Chat"
-                            : _selectedIndex == 3
-                                ? "Profile"
-                                : "People",
-                  ),
-                  Text(
-                    userData!.firstName.toString() ?? "",
-                    style: TextStyle(fontSize: 12),
-                  ),
+
+                  Image.asset('assets/images/logo.png',width: 50,height: 50,),
+                  Text('SUREKEEP',style: GoogleFonts.monoton(color: AppColors.logoColor,
+                    textStyle: const TextStyle( letterSpacing: 5,fontSize: 12,fontWeight: FontWeight.bold),
+                  ),),
+                  // Text(
+                  //   _selectedIndex == 1
+                  //       ? "Chat"
+                  //       : _selectedIndex == 2
+                  //           ? "Search"
+                  //           : _selectedIndex == 3
+                  //               ? "Profile"
+                  //               : "Contact",
+                  // ),
+
                 ],
               ),
               automaticallyImplyLeading: false,
-              centerTitle: true,
+
               elevation: 0,
-              leading: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    userData!.imageUrl.toString(),
-                  ),
-                ),
-              ),
-              actions: [
-                Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: InkWell(
-                    onTap: () {
-                      AuthProvider.logout(context);
+              // leading: Padding(
+              //   padding: const EdgeInsets.all(12.0),
+              //   child: ClipRRect(
+              //     borderRadius: BorderRadius.circular(10),
+              //     child: Image.network(
+              //       userData!.imageUrl.toString(),
+              //     ),
+              //   ),
+              // ),
+
+                actions: [
+                  _selectedIndex == 2 ?
+                  IconButton(
+                    onPressed: () {
+                      // method to show the search bar
+                      showSearch(
+                          context: context,
+                          // delegate to customize the search bar
+                          delegate: CustomSearchDelegate());
                     },
-                    child: Icon(Icons.logout),
-                  ),
-                ),
-              ],
+                    icon: const Icon(Icons.search,color: Colors.black,),
+                  ): SizedBox.shrink(),
+                ]
+              // actions: [
+              //   Padding(
+              //     padding: EdgeInsets.all(8.0),
+              //     child: InkWell(
+              //       onTap: () {
+              //         AuthProvider.logout(context);
+              //       },
+              //       child: Icon(Icons.logout),
+              //     ),
+              //   ),
+              // ],
             ),
 
             body: WillPopScope(
@@ -254,9 +276,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 children: [
 
                   ListAllContactPhone(userData: userData!),
-                  Icon(Icons.search),
-                  const PersonWhoChattedYou(),
 
+                  const PersonWhoChattedYou(),
+                  SearchUser(),
                   ProfileScreen(user: userData!),
                   //ListAllContactPhone(),
 
@@ -310,13 +332,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   label: 'Contact',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.search),
-                  label: 'Search',
+                  icon: Icon(Icons.message),
+                  label: 'Chat',
                 ),
 
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.message),
-                  label: 'Chat',
+                  icon: Icon(Icons.search),
+                  label: 'Search',
                 ),
 
                 BottomNavigationBarItem(

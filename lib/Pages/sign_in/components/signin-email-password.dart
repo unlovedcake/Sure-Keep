@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:provider/provider.dart';
 import 'package:sure_keep/All-Constants/all_constants.dart';
+import 'package:sure_keep/Pages/sign_in/components/password-input-field.dart';
 import 'package:sure_keep/Pages/sign_up/components/head_text.dart';
 import 'package:sure_keep/Pages/sign_up/components/otp-verification-code.dart';
 import 'package:sure_keep/Pages/sign_in/components/social.dart';
@@ -35,7 +36,7 @@ class _SignInEmailPasswordState extends State<SignInEmailPassword> {
   List<Widget> icon = [];
 
   TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+
 
 
   FirebaseAuth auth = FirebaseAuth.instance;
@@ -67,6 +68,7 @@ class _SignInEmailPasswordState extends State<SignInEmailPassword> {
 
 
             RectangularInputField(
+              sufixIcon: null,
               controller: emailController,
               textInputType: TextInputType.emailAddress,
               hintText: 'Email',
@@ -82,22 +84,7 @@ class _SignInEmailPasswordState extends State<SignInEmailPassword> {
                 }
               },
             ),
-            RectangularInputField(
-              controller: passwordController,
-              textInputType: TextInputType.text,
-              hintText: 'Password',
-              icon: const Icon(
-                Icons.lock,
-                color: Colors.black,
-              ),
-              obscureText: true,
-              onChanged: (val) {},
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return ("Password  is required");
-                }
-              },
-            ),
+          PasswordInputField(),
 
 
 
@@ -120,7 +107,7 @@ class _SignInEmailPasswordState extends State<SignInEmailPassword> {
             if (_formKey.currentState!.validate()) {
 
 
-              context.read<AuthProvider>().signIn(emailController.text, passwordController.text, context);
+              context.read<AuthProvider>().signIn(emailController.text,  Provider.of<AuthProvider>(context,listen: false).getPasswordValue, context);
 
             }
           }),

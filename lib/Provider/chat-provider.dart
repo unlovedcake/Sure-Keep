@@ -17,6 +17,8 @@ import 'auth-provider.dart';
 class ChatProvider extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
   bool isSend = true;
+  bool isRead = false;
+
   String? isRadioButton ="";
 
   String errorMessage = "";
@@ -31,8 +33,15 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  setIsRead(bool read) {
+    isRead = read;
+    notifyListeners();
+  }
+
+
   String get getRadioButton => isRadioButton!;
   bool get getSend => isSend;
+  bool get getIsRead => isRead;
 
   User? user = FirebaseAuth.instance.currentUser;
 

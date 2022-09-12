@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,8 +24,6 @@ class AuthProvider extends ChangeNotifier {
   User? user = FirebaseAuth.instance.currentUser;
   final _auth = FirebaseAuth.instance;
 
-
-
   String? errorMessage;
   String? userEmail;
   String verificationID = "";
@@ -32,16 +31,19 @@ class AuthProvider extends ChangeNotifier {
   String _otpCode = "000000";
   String genderValue = "Man";
 
+  String? passwordValue;
+
   bool isGenderMan = false;
 
   bool isGenderWoman = false;
 
   bool isAppActive = false;
   bool isBackGroundMode = false;
+  bool _isHidden = true;
 
   bool get getAppActive => isAppActive;
 
-  bool get getBackGroundMode =>  isBackGroundMode;
+  bool get getBackGroundMode => isBackGroundMode;
 
   setBackGroundMode(bool isActive) {
     isBackGroundMode = isActive;
@@ -68,24 +70,35 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  setIsHidden(bool hide) {
+    _isHidden = hide;
+    notifyListeners();
+  }
+
+  setPassWordValue(String password) {
+    passwordValue = password;
+    notifyListeners();
+  }
+
+  String get getPasswordValue => passwordValue!;
 
   String get getGenderValue => genderValue;
+
   bool get getGenderMan => isGenderMan;
+
   bool get getGenderWoman => isGenderWoman;
 
+  bool get getIsHidden => _isHidden;
+
   String get getPhoneNumber => _phoneNumber;
+
   String get getVerificationID => verificationID;
+
   String get getOtpCode => _otpCode;
 
   String get getUserEmail => userEmail!;
 
-
-
-
-
-
   Future<void> loginWithPhone(String phoneNumber, BuildContext context) async {
-
     int? resendToken;
     showDialog(
         context: context,
@@ -100,12 +113,8 @@ class AuthProvider extends ChangeNotifier {
       _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
-
-          await _auth.signInWithCredential(credential).then((value){
-
-             _otpCode = credential.smsCode!;
-
-
+          await _auth.signInWithCredential(credential).then((value) {
+            _otpCode = credential.smsCode!;
 
             Fluttertoast.showToast(
               msg: 'OTP sent successfully.',
@@ -117,7 +126,6 @@ class AuthProvider extends ChangeNotifier {
           });
         },
         verificationFailed: (FirebaseAuthException e) {
-
           Fluttertoast.showToast(
             timeInSecForIosWeb: 3,
             msg: e.message.toString(),
@@ -143,12 +151,9 @@ class AuthProvider extends ChangeNotifier {
           // }
           Navigator.pop(context);
           print(e.toString());
-
         },
         forceResendingToken: resendToken,
         codeSent: (String verificationId, int? resendTokens) {
-
-
           verificationID = verificationId;
           _phoneNumber = phoneNumber;
 
@@ -159,32 +164,22 @@ class AuthProvider extends ChangeNotifier {
           Navigator.pop(context);
           NavigateRoute.gotoPage(context, const OTPVerificationCode());
           print("Code Sent");
-
-
         },
         codeAutoRetrievalTimeout: (String verificationId) {
+          Navigator.pop(context);
 
-
-
-            Navigator.pop(context);
-
-            print("Code Timeout");
+          print("Code Timeout");
         },
         timeout: const Duration(seconds: 60),
       );
       notifyListeners();
     } catch (e) {
-
       print(e.toString());
-
     }
   }
 
-
-
-   Future<void> verifyOTP(
+  Future<void> verifyOTP(
       String otpCode, String verificationId, BuildContext context) async {
-
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -194,13 +189,11 @@ class AuthProvider extends ChangeNotifier {
           );
         });
 
-    try{
-
+    try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
           verificationId: verificationId, smsCode: otpCode);
 
-      if( _otpCode != otpCode){
-
+      if (_otpCode != otpCode) {
         Fluttertoast.showToast(
           msg: "Invalid OTP Code",
           toastLength: Toast.LENGTH_SHORT,
@@ -211,10 +204,7 @@ class AuthProvider extends ChangeNotifier {
           fontSize: 16.0,
         );
         Navigator.pop(context);
-      }else{
-
-
-
+      } else {
         Fluttertoast.showToast(
           msg: "Your account is successfully verified.",
           toastLength: Toast.LENGTH_SHORT,
@@ -224,24 +214,16 @@ class AuthProvider extends ChangeNotifier {
           fontSize: 16.0,
         );
         Navigator.pop(context);
-        NavigateRoute.gotoPage(
-            context, const SignUpScreen());
+        NavigateRoute.gotoPage(context, const SignUpScreen());
       }
 
       await _auth.signInWithCredential(credential).then(
-            (val) {
-
-        },
-      );
-    }catch(e){
+            (val) {},
+          );
+    } catch (e) {
       print(e.toString());
     }
-
-
-
   }
-
-
 
   signUp(String password, UserModel? userModel, BuildContext context) async {
     try {
@@ -257,17 +239,17 @@ class AuthProvider extends ChangeNotifier {
       String? token = await FirebaseMessaging.instance.getToken();
 
       UserCredential userCredential =
-      await _auth.createUserWithEmailAndPassword(
-          email: userModel!.email.toString(), password: password);
+          await _auth.createUserWithEmailAndPassword(
+              email: userModel!.email.toString(), password: password);
       user = userCredential.user;
 
       userModel.docID = user!.uid;
 
-      String phoneNum = Provider.of<AuthProvider>(context,listen: false).getPhoneNumber;
+      String phoneNum =
+          Provider.of<AuthProvider>(context, listen: false).getPhoneNumber;
 
       userModel.phoneNumber = _phoneNumber;
       userModel.token = token;
-
 
       await user!.updateDisplayName(userModel.firstName);
       await user!.updatePhotoURL(userModel.imageUrl);
@@ -275,11 +257,9 @@ class AuthProvider extends ChangeNotifier {
       await user!.reload();
       user = _auth.currentUser;
 
-
-
       final QuerySnapshot result = await FirebaseFirestore.instance
           .collection('table-user')
-          .where('email', isEqualTo:  userModel.email.toString())
+          .where('email', isEqualTo: userModel.email.toString())
           .get();
       final List<DocumentSnapshot> document = result.docs;
 
@@ -289,57 +269,48 @@ class AuthProvider extends ChangeNotifier {
             .doc(user!.uid)
             .set(userModel.toMap())
             .then((uid) async {
-
           userEmail = userModel.email.toString();
 
           UserModel userData = UserModel(
-            docID: userModel.docID,
-            firstName: userModel.firstName,
-            lastName: userModel.lastName,
-            address: userModel.address,
-            phoneNumber: userModel.phoneNumber,
-            email: userModel.email,
-            fakePassword: userModel.fakePassword,
-            gender: userModel.gender,
-            birthDate: userModel.birthDate, userType: userModel.userType,
-            imageUrl: userModel.imageUrl
-          );
+              docID: userModel.docID,
+              firstName: userModel.firstName,
+              lastName: userModel.lastName,
+              address: userModel.address,
+              phoneNumber: userModel.phoneNumber,
+              email: userModel.email,
+              fakePassword: userModel.fakePassword,
+              gender: userModel.gender,
+              birthDate: userModel.birthDate,
+              userType: userModel.userType,
+              imageUrl: userModel.imageUrl);
 
           // DocumentSnapshot documentSnapshot = document[0];
           // UserModel userData =  UserModel.fromMap(documentSnapshot);
 
+          NavigateRoute.gotoPage(context, Home());
 
-          NavigateRoute.gotoPage(context,  Home());
-
-
-
-
-          QuickAlert.show(
-
-            //customAsset: 'assets/images/form-header-img.png',
-              context: context,
-              autoCloseDuration: const Duration(seconds: 3),
-              type: QuickAlertType.success,
-              text: 'Welcome, You are now logged in !!!',
-
-          );
-
+          //
+          // QuickAlert.show(
+          //
+          //   //customAsset: 'assets/images/form-header-img.png',
+          //     context: context,
+          //     autoCloseDuration: const Duration(seconds: 3),
+          //     type: QuickAlertType.success,
+          //     text: 'Welcome, You are now logged in !!!',
+          //
+          // );
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
           prefs.setString('email', userModel.email.toString());
 
-
-          // Fluttertoast.showToast(
-          //   msg: "Account created successfully :) ",
-          //   timeInSecForIosWeb: 3,
-          //   gravity: ToastGravity.CENTER_RIGHT,
-          // );
-
-
+          Fluttertoast.showToast(
+            msg: "Account created successfully :) ",
+            timeInSecForIosWeb: 3,
+            gravity: ToastGravity.CENTER_RIGHT,
+          );
         });
       }
       notifyListeners();
-
     } on FirebaseAuthException catch (error) {
       Navigator.of(context).pop();
       switch (error.code) {
@@ -369,7 +340,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-
   signIn(String email, String password, BuildContext context) async {
     try {
       showDialog(
@@ -381,7 +351,7 @@ class AuthProvider extends ChangeNotifier {
             );
           });
 
-      final QuerySnapshot result =  await FirebaseFirestore.instance
+      final QuerySnapshot result = await FirebaseFirestore.instance
           .collection('table-user')
           .where('email', isEqualTo: email)
           .get();
@@ -389,61 +359,39 @@ class AuthProvider extends ChangeNotifier {
 
       await _auth
           .signInWithEmailAndPassword(email: email, password: password)
-          .then((id)  async{
-
-
-
-        if(document.isNotEmpty){
-
+          .then((id) async {
+        if (document.isNotEmpty) {
           String? token = await FirebaseMessaging.instance.getToken();
 
-
           DocumentSnapshot documentSnapshot = document[0];
-          UserModel userData =  UserModel.fromMap(documentSnapshot);
+          UserModel userData = UserModel.fromMap(documentSnapshot);
 
           await FirebaseFirestore.instance
               .collection("table-user")
               .doc(userData.docID)
-              .update({'token':token });
+              .update({'token': token});
           NavigateRoute.gotoPage(context, Home());
-
-
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
           prefs.setString('email', email);
 
-
-
-
-          QuickAlert.show(
-
-            //customAsset: 'assets/images/form-header-img.png',
-            context: context,
-            autoCloseDuration: const Duration(seconds: 3),
-            type: QuickAlertType.success,
-            text: 'Welcome, You are now logged in !!!',
-
-          );
-
+          // QuickAlert.show(
+          //
+          //   //customAsset: 'assets/images/form-header-img.png',
+          //   context: context,
+          //   autoCloseDuration: const Duration(seconds: 3),
+          //   type: QuickAlertType.success,
+          //   text: 'Welcome, You are now logged in !!!',
+          //
+          // );
         }
 
-
-
-
-
-
-        // Fluttertoast.showToast(
-        //   msg: "You are now logged in... :) ",
-        //   gravity: ToastGravity.CENTER_RIGHT,
-        // );
-
-
-
-
-
-
-
+        Fluttertoast.showToast(
+          msg: "Welcome, You are now logged in !!! :) ",
+          timeInSecForIosWeb: 3,
+          gravity: ToastGravity.CENTER_RIGHT,
+        );
       });
 
       notifyListeners();
@@ -493,8 +441,8 @@ class AuthProvider extends ChangeNotifier {
   static Future<void> logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
 
-    Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (context) => const SignInScreen()));
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const SignInScreen()));
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove('email');
@@ -505,10 +453,34 @@ class AuthProvider extends ChangeNotifier {
 
     var email = prefs.getString('email');
     if (email != null) {
-      return  true;
+      return true;
     } else {
       return false;
     }
   }
 
+  editProfile(String? uid, String? imageUrl, BuildContext context) async {
+    FirebaseStorage storage = FirebaseStorage.instance;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('table-user')
+          .doc(uid)
+          .update({
+        "imageUrl": imageUrl,
+      }).whenComplete(() async {
+
+
+        await user!.updatePhotoURL(imageUrl);
+
+
+        Fluttertoast.showToast(msg: "Successfully Save Changes");
+        print("success!");
+        notifyListeners();
+      });
+    } on FirebaseException {
+      // print(error);
+      Fluttertoast.showToast(msg: "Something went wrong !!!");
+    }
+  }
 }

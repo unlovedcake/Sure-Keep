@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -396,41 +397,66 @@ class _FakeConversationState extends State<FakeConversation> {
                         ? Alignment.topRight
                         : Alignment.topLeft),
                     child: Wrap(
-                      spacing: 4,
+                      spacing: 6,
                       children: [
-                        (messageData.get('idFrom') == user!.uid
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  user!.photoURL.toString(),
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                  widget.user.imageUrl.toString(),
-                                  width: 20,
-                                  height: 20,
-                                ))),
+                        (messageData.get('idFrom') != user!.uid
+                            ?ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child:CachedNetworkImage(
+                        imageUrl:  widget.userNameAndImage.imageUrl.toString(),
+                        width: 20.0,
+                        height: 20.0,
+                        fit: BoxFit.cover,
+                      ),)
+
+
+                            : const SizedBox.shrink()
+                        // ClipRRect(
+                        //         borderRadius: BorderRadius.circular(10),
+                        //         child: Image.network(
+                        //           widget.userNameAndImage.imageUrl.toString(),
+                        //           width: 20,
+                        //           height: 20,
+                        //         ))
+                        ),
                         Column(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(20),
-                                    bottomLeft: Radius.circular(20)),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(minWidth: 40, maxWidth: 250),
+                              child:
 
-                                //borderRadius: BorderRadius.circular(20),
-                                color: (messageData.get('idFrom') == user!.uid
-                                    ? Colors.grey.shade200
-                                    : Colors.blue[200]),
-                              ),
-                              padding: EdgeInsets.all(16),
-                              child: Text(
-                                messageData.get('message'),
-                                style: TextStyle(fontSize: 15),
+                              messageData.get('idFrom') == user!.uid ? Container(
+
+                                decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(20)
+                                        ,bottomRight:  Radius.circular(20)
+                                        ,bottomLeft:  Radius.circular(20)),
+
+                                    color:  Colors.grey.shade200
+
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  messageData.get('message'),
+
+                                  style: const TextStyle(fontSize: 15),
+                                ),
+                              ) : Container(
+
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                      topRight: Radius.circular(20)
+                                      ,bottomRight:  Radius.circular(20)
+                                      ,bottomLeft:  Radius.circular(20)),
+                                  color: Colors.blue[200],
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  messageData.get('message'),
+
+                                  style: const TextStyle(fontSize: 15),
+                                ),
                               ),
                             ),
                             Text(
@@ -443,7 +469,20 @@ class _FakeConversationState extends State<FakeConversation> {
                                   TextStyle(fontSize: 10, color: Colors.grey),
                             ),
                           ],
+
                         ),
+
+                  (messageData.get('idFrom') == user!.uid
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child:CachedNetworkImage(
+                      imageUrl:   user!.photoURL.toString(),
+                      width: 20.0,
+                      height: 20.0,
+                      fit: BoxFit.cover,
+                    ),)
+
+                      : const SizedBox.shrink()),
                       ],
                     ),
                   ),
