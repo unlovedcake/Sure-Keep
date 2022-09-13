@@ -18,6 +18,7 @@ import 'package:sure_keep/Pages/Profile/profile-screen.dart';
 import 'package:sure_keep/Provider/auth-provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:sure_keep/Router/navigate-route.dart';
+import '../../Chat/peroson1-who-chatted-you.dart';
 import '../../Chat/person-who-chatted-you.dart';
 import '../../Models/user-model.dart';
 import '../search-user/search-user-screen.dart';
@@ -277,7 +278,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
                   ListAllContactPhone(userData: userData!),
 
-                  const PersonWhoChattedYou(),
+                  Person1WhoChattedYou(),
                   SearchUser(),
                   ProfileScreen(user: userData!),
                   //ListAllContactPhone(),

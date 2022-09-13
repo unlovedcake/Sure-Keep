@@ -15,6 +15,7 @@ class UserModel {
   String? userType;
   String? imageUrl;
   String? token;
+  bool? isAccept;
   Map? chattingWith;
   Map? geoLocation;
 
@@ -32,6 +33,7 @@ class UserModel {
         this.userType,
         this.imageUrl,
         this.token,
+        this.isAccept,
         this.chattingWith,
         this.geoLocation});
 
@@ -52,6 +54,7 @@ class UserModel {
       userType: map['userType'],
       imageUrl: map['imageUrl'],
       token: map['token'],
+      isAccept: map['isAccept'],
       chattingWith: map['chattingWith'],
       geoLocation: map['geoLocation'],
     );
@@ -74,6 +77,7 @@ class UserModel {
       'userType': userType,
       'imageUrl': imageUrl,
       'token': token,
+      'isAccept': isAccept,
       'chattingWith': chattingWith,
       'geoLocation': geoLocation,
     };

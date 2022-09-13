@@ -116,6 +116,9 @@ class AuthProvider extends ChangeNotifier {
           await _auth.signInWithCredential(credential).then((value) {
             _otpCode = credential.smsCode!;
 
+            Navigator.pop(context);
+            NavigateRoute.gotoPage(context, const OTPVerificationCode());
+
             Fluttertoast.showToast(
               msg: 'OTP sent successfully.',
               timeInSecForIosWeb: 3,
@@ -153,7 +156,7 @@ class AuthProvider extends ChangeNotifier {
           print(e.toString());
         },
         forceResendingToken: resendToken,
-        codeSent: (String verificationId, int? resendTokens) {
+        codeSent: (String verificationId, int? resendTokens) async {
           verificationID = verificationId;
           _phoneNumber = phoneNumber;
 
@@ -161,9 +164,18 @@ class AuthProvider extends ChangeNotifier {
           UserCredential? userCredential;
           userCredential?.additionalUserInfo?.isNewUser;
 
-          Navigator.pop(context);
-          NavigateRoute.gotoPage(context, const OTPVerificationCode());
+
           print("Code Sent");
+
+          // await Future.delayed(Duration(seconds: 20)).then((value) {
+          //   Navigator.pop(context);
+          //     Fluttertoast.showToast(
+          //       timeInSecForIosWeb: 3,
+          //       msg: 'You cant use another phone number.',
+          //       toastLength: Toast.LENGTH_LONG,
+          //       gravity: ToastGravity.CENTER_RIGHT,
+          //     );
+          // });
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           Navigator.pop(context);

@@ -14,7 +14,7 @@ class PasswordInputField extends StatefulWidget {
 }
 
 class _PasswordInputFieldState extends State<PasswordInputField> {
-  bool _isHidden = true;
+  bool _isHidden = false;
 
   TextEditingController passwordController = TextEditingController();
   @override

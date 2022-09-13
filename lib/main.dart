@@ -27,23 +27,23 @@ Future<void> main() async {
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // // AwesomeNotifications().initialize(
-  // //     'resource://drawable/img',
-  // //     [            // notification icon
-  // //       NotificationChannel(
-  // //         channelGroupKey: 'basic_test',
-  // //         channelKey: 'basic',
-  // //         channelName: 'Basic notifications',
-  // //         channelDescription: 'Notification channel for basic tests',
-  // //         channelShowBadge: true,
-  // //         importance: NotificationImportance.High,
-  // //         enableVibration: true,
-  // //
-  // //
-  // //       ),
-  // //
-  // //     ]
-  // );
+  AwesomeNotifications().initialize(
+      'resource://drawable/img',
+      [            // notification icon
+        NotificationChannel(
+          channelGroupKey: 'basic_test',
+          channelKey: 'basic',
+          channelName: 'Basic notifications',
+          channelDescription: 'Notification channel for basic tests',
+          channelShowBadge: true,
+          importance: NotificationImportance.High,
+          enableVibration: true,
+
+
+        ),
+
+      ]
+  );
 
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -98,9 +98,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
     super.initState();
 
     AwesomeNotifications().actionStream.listen((action) {
-      if(action.buttonKeyPressed == "open"){
+      if(action.buttonKeyPressed == "Accept"){
+        print(action.payload);
+
+        String? value = action.payload!["email"];
+
         print("Open button is pressed");
-      }else if(action.buttonKeyPressed == "delete"){
+        print(value);
+      }else if(action.buttonKeyPressed == "Decline"){
         print("Delete button is pressed.");
         print(action.payload);
       }else{

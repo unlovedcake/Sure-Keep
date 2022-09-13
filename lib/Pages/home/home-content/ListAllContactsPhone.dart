@@ -1,11 +1,17 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-
+import 'package:http/http.dart' as http;
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sure_keep/Chat/chatConversation.dart';
 import 'package:sure_keep/Models/user-model.dart';
@@ -31,6 +37,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
   String _message = "You are invited";
   final telephony = Telephony.instance;
+
+  bool isAccept = false;
 
 
   List<String> phoneNumber = [];
@@ -68,6 +76,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     getContact();
     initPlatformState();
     getUsers();
+    loadFCM();
   }
 
   void getContact() async {
@@ -102,6 +111,97 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     }
 
     if (!mounted) return;
+  }
+
+
+
+  void sendPushMessage(String token, String title, String body) async {
+    try {
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+          'key=AAAA46pw8dw:APA91bH16DQMBlHChehqWl-REs6Y4pkEVqOTtME1yRgGvN-8yrQcy5uwzXDW_HbR_jK2o_sGwjTo-rWKVXkbz62nMKJN3lqrhWCrkxMN7XG4D32V3utQlgHLUvmwhAdIgnVDIkOLJRCJ',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'notification': <String, dynamic>{'body': body, 'title': title},
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'id': '1',
+              'status': 'done'
+            },
+            "to": token,
+          },
+        ),
+      );
+
+    } catch (e) {
+      print("error push notification");
+    }
+  }
+
+  void loadFCM() async {
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+
+
+  void loadSend(String email) async {
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+
+
+
+      bool isallowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isallowed) {
+        //no permission of local notification
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      } else {
+        if (notification != null && android != null && !kIsWeb) {
+
+
+          //show notification
+          AwesomeNotifications().createNotification(
+              content: NotificationContent( //simgple notification
+                  id: 123,
+                  channelKey: 'basic',
+                  //set configuration wuth key "basic"
+                  title: notification.title,
+                  body: notification.body,
+                  payload: {"email": email},
+                  autoDismissible: false,
+                  //bigPicture: widget.user.imageUrl,
+                  roundedBigPicture: true
+
+              ),
+
+              actionButtons: [
+                NotificationActionButton(
+                  key: "Accept",
+                  label: "Accept",
+                ),
+
+                NotificationActionButton(
+                  key: "Decline",
+                  label: "Decline",
+                )
+              ]
+          );
+        }
+      }
+
+    });
+
+
   }
 
   @override
@@ -236,22 +336,41 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
                               phoneNumber.contains(number.replaceAll(" ", "")) ?
                               OutlinedButton(onPressed: () async{
-
+                                UserModel? userModel;
+                                User? user = FirebaseAuth.instance.currentUser;
 
                                 final QuerySnapshot result = await FirebaseFirestore.instance
                                     .collection('table-user')
                                     .where('phoneNumber', isEqualTo: number.replaceAll(" ", "") )
                                     .get();
                                 final List<DocumentSnapshot> document = result.docs;
-                                UserModel? userModel;
+
                                 DocumentSnapshot documentSnapshot = document[0];
 
                                 userModel = UserModel.fromMap( documentSnapshot);
 
-                                print(userModel);
-                                NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
 
-                              }, child: Text('Connect',style: GoogleFonts.lato(
+                                 //NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
+                                await FirebaseFirestore.instance
+                                    .collection('table-user')
+                                    .doc(userModel.docID)
+                                    .update({
+                                  "Accept":
+                                  FieldValue.arrayUnion([user!.email],),
+                                }).whenComplete(() async {
+
+                                  sendPushMessage(userModel!.token.toString(), user.displayName.toString(),"Send you a request");
+                                  loadSend(user.email.toString());
+                                  // Future.delayed(Duration(seconds: 2)).then((value) async{
+                                  //   await CircularProgressIndicator();
+                                  //    Navigator.pop(context);
+                                     Fluttertoast.showToast(msg: "Request sent...");
+                                });
+
+
+
+
+                              }, child: isAccept == true ? Text('Connected'):Text('Connect',style: GoogleFonts.lato(
                                 textStyle: const TextStyle(color: Colors.red, letterSpacing: .5),
                               )),)
                               : OutlinedButton(onPressed: (){
@@ -324,5 +443,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
           );
   });
   }
+
+
+
 
 }

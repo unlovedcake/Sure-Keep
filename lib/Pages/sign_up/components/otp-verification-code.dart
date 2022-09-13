@@ -218,38 +218,80 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
     );
   }
 
-  SizedBox otpTextField(bool first, last, TextEditingController? controller) {
-    return SizedBox(
-      width: 40,
-      height: 50,
-      child: TextFormField(
-        controller: controller,
-        //autofocus: true,
-        onChanged: (value) {
-          if (value.length == 1 && last == false) {
-            FocusScope.of(context).nextFocus();
-          }
-          if (value.length == 0 && first == false) {
-            FocusScope.of(context).previousFocus();
-          }
-        },
-       // showCursor: false,
+  LayoutBuilder otpTextField(bool first, last, TextEditingController? controller) {
+    return LayoutBuilder(builder: (context, constraint) {
+      if (constraint.maxWidth <= 263.0) {
 
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.only(bottom: 1, top: 2),
-          counter: const Offstage(),
-          enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(width: 1, color: Colors.black12),
-              borderRadius: BorderRadius.circular(8)),
-          focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(width: 1, color:AppColors.logoColor),
-              borderRadius: BorderRadius.circular(12)),
-        ),
-      ),
+        print(constraint.maxWidth);
+        print('OKE');
+        return SizedBox(
+          width: 30,
+          height: 40,
+          child: TextFormField(
+            controller: controller,
+            //autofocus: true,
+            onChanged: (value) {
+              if (value.length == 1 && last == false) {
+                FocusScope.of(context).nextFocus();
+              }
+              if (value.length == 0 && first == false) {
+                FocusScope.of(context).previousFocus();
+              }
+            },
+            // showCursor: false,
+
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.only(bottom: 1, top: 2),
+              counter: const Offstage(),
+              enabledBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(width: 1, color: Colors.black12),
+                  borderRadius: BorderRadius.circular(8)),
+              focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(width: 1, color:AppColors.logoColor),
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        );
+      }else{
+        return SizedBox(
+          width: 40,
+          height: 50,
+          child: TextFormField(
+            controller: controller,
+            //autofocus: true,
+            onChanged: (value) {
+              if (value.length == 1 && last == false) {
+                FocusScope.of(context).nextFocus();
+              }
+              if (value.length == 0 && first == false) {
+                FocusScope.of(context).previousFocus();
+              }
+            },
+            // showCursor: false,
+
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.only(bottom: 1, top: 2),
+              counter: const Offstage(),
+              enabledBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(width: 1, color: Colors.black12),
+                  borderRadius: BorderRadius.circular(8)),
+              focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(width: 1, color:AppColors.logoColor),
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        );
+      }
+
+      }
     );
   }
 

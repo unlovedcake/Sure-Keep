@@ -19,15 +19,18 @@ class HeaderSignUp extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: size.height * 0.15),
-          Text('Welcome',style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-          ),),
-          Text('SIGN UP',style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-          ),),
+          //SizedBox(height: size.height * 0.15),
+
+          AspectRatio(aspectRatio: 6 / 3,
+              child: Image.asset('assets/images/logo.png')),
+          // Text('Welcome',style: TextStyle(
+          //   fontSize: 24,
+          //   fontWeight: FontWeight.w600,
+          // ),),
+          // Text('SIGN UP',style: TextStyle(
+          //   fontSize: 36,
+          //   fontWeight: FontWeight.bold,
+          // ),),
         ],
       ),
     );

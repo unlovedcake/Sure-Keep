@@ -25,8 +25,6 @@ import 'header-signup.dart';
 import 'package:intl/intl.dart';
 
 class AnimateSignUpFields extends StatefulWidget {
-
-
   const AnimateSignUpFields({Key? key}) : super(key: key);
 
   @override
@@ -51,155 +49,147 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
   DateTime? pickedDate;
   final _formKey = GlobalKey<FormState>();
 
-
-
-
-
-
   @override
   void initState() {
-
-
-      icon = [
-        const HeaderSignUp(),
-        Form(
-          key: _formKey,
-          child: Column(
-
-            children: [
-              RectangularInputField(
-                sufixIcon: null,
-                controller: firstNameController,
-                textInputType: TextInputType.text,
-                hintText: 'First Name',
-                icon: const Icon(
-                  Icons.person,
-                  color: Colors.orange,
-                ),
-                obscureText: false,
-                onChanged: (val) {},
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return ("User name is required");
-                  }
-                },
+    icon = [
+      const HeaderSignUp(),
+      Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            RectangularInputField(
+              sufixIcon: null,
+              controller: firstNameController,
+              textInputType: TextInputType.text,
+              hintText: 'First Name',
+              icon: const Icon(
+                Icons.person,
+                color: Colors.orange,
               ),
-              RectangularInputField(
-                sufixIcon: null,
-                controller: lastNameController,
-                textInputType: TextInputType.text,
-                hintText: 'Last Name',
-                icon: const Icon(
-                  Icons.person,
-                  color: Colors.blue,
-                ),
-                obscureText: false,
-                onChanged: (val) {},
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return ("Last name is required");
-                  }
-                },
+              obscureText: false,
+              onChanged: (val) {},
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return ("User name is required");
+                }
+              },
+            ),
+            RectangularInputField(
+              sufixIcon: null,
+              controller: lastNameController,
+              textInputType: TextInputType.text,
+              hintText: 'Last Name',
+              icon: const Icon(
+                Icons.person,
+                color: Colors.blue,
               ),
-
-              Ink(
-                child: NeumorphicTextFieldContainer(
-                  child: TextFormField(
-                    controller: dateinput,
-                    //editing controller of this TextField
-                    decoration: InputDecoration(
-                      helperStyle: TextStyle(
-                        color: AppColors.black.withOpacity(0.7),
-                        fontSize: 18,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.calendar_today,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                      hintText: 'Your Birthday',
-                      border: InputBorder.none,
+              obscureText: false,
+              onChanged: (val) {},
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return ("Last name is required");
+                }
+              },
+            ),
+            Ink(
+              child: NeumorphicTextFieldContainer(
+                child: TextFormField(
+                  controller: dateinput,
+                  //editing controller of this TextField
+                  decoration: InputDecoration(
+                    helperStyle: TextStyle(
+                      color: AppColors.black.withOpacity(0.7),
+                      fontSize: 18,
                     ),
-                    readOnly: true,
-                    //set it true, so that user will not able to edit text
-                    onTap: () async {
-                      pickedDate = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1950),
-                          //DateTime.now() - not to allow to choose before today.
-                          lastDate: DateTime(2101));
-
-                      if (pickedDate != null) {
-                        print(
-                            pickedDate); //pickedDate output format => 2021-03-10 00:00:00.000
-                        String formattedDate =
-                        DateFormat.yMMMMd().format(pickedDate!);
-                        //String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-                        print(
-                            formattedDate); //formatted date output using intl package =>  2021-03-16
-                        //you can implement different kind of Date Format here according to your requirement
-
-                        setState(() {
-                          dateinput.text =
-                              formattedDate; //set output date to TextField value.
-                        });
-
-                        print(dateinput.text);
-                      } else {
-                        print("Date is not selected");
-                      }
-                    },
+                    prefixIcon: Icon(
+                      Icons.calendar_today,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                    hintText: 'Your Birthday',
+                    border: InputBorder.none,
                   ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return ("Birthdate is required");
+                    }
+                  },
+                  readOnly: true,
+                  //set it true, so that user will not able to edit text
+                  onTap: () async {
+                    pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(1950),
+                        //DateTime.now() - not to allow to choose before today.
+                        lastDate: DateTime(2101));
+
+                    if (pickedDate != null) {
+                      print(
+                          pickedDate); //pickedDate output format => 2021-03-10 00:00:00.000
+                      String formattedDate =
+                          DateFormat.yMMMMd().format(pickedDate!);
+                      //String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                      print(
+                          formattedDate); //formatted date output using intl package =>  2021-03-16
+                      //you can implement different kind of Date Format here according to your requirement
+
+                      setState(() {
+                        dateinput.text =
+                            formattedDate; //set output date to TextField value.
+                      });
+
+                      print(dateinput.text);
+                    } else {
+                      print("Date is not selected");
+                    }
+                  },
                 ),
               ),
-
-              const SizedBox(
-                height: Sizes.dimen_40 ,
-              ),
-
-         Gender(),
-
-            ],
-          ),
+            ),
+            const SizedBox(
+              height: Sizes.dimen_40,
+            ),
+            Gender(),
+          ],
         ),
-
-
-        const SizedBox(
-          height: Sizes.appPadding / 2,
-        ),
-        RectangularButton(
-            text: 'Continue',
-            press: () {
-              UserModel userModel = UserModel()
-                ..firstName = firstNameController.text
-                ..lastName = lastNameController.text
-                ..birthDate =  DateFormat.yMMMMd().format(pickedDate!)
-                ..gender = Provider.of<AuthProvider>(context,listen: false).genderValue
-                ..userType = "User"
-                // ..chattingWith = {
-                //   'chattingWith': "",
-                //   'lastMessage': "",
-                //   'dateLastMessage': DateTime.now(),
-                // }
-                ..imageUrl =
-                    "https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000";
-
-              NavigateRoute.gotoPage(context, EmailPasswordTextFields(userModel : userModel));
-              // if (_formKey.currentState!.validate()) {
-              //
-              //
-              //   //context.read<AuthProvider>().loginWithPhone(phoneController.text, context);
-              //
+      ),
+      const SizedBox(
+        height: Sizes.appPadding / 2,
+      ),
+      RectangularButton(
+          text: 'Continue',
+          press: () {
+            UserModel userModel = UserModel()
+              ..firstName = firstNameController.text
+              ..lastName = lastNameController.text
+              ..birthDate = DateFormat.yMMMMd().format(pickedDate!)
+              // ..gender =
+              //     Provider.of<AuthProvider>(context, listen: false).genderValue
+              ..userType = "User"
+              // ..chattingWith = {
+              //   'chattingWith': "",
+              //   'lastMessage': "",
+              //   'dateLastMessage': DateTime.now(),
               // }
-            }),
-        const SizedBox(
-          height: Sizes.dimen_40 / 2,
-        ),
-        const Social(),
-      ];
-
-
+              ..imageUrl =
+                  "https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000";
+            if (_formKey.currentState!.validate()) {
+              NavigateRoute.gotoPage(
+                  context, EmailPasswordTextFields(userModel: userModel));
+            }
+            // if (_formKey.currentState!.validate()) {
+            //
+            //
+            //   //context.read<AuthProvider>().loginWithPhone(phoneController.text, context);
+            //
+            // }
+          }),
+      const SizedBox(
+        height: Sizes.dimen_40 / 2,
+      ),
+      const Social(),
+    ];
 
     itemsCount = icon.length;
 
@@ -232,5 +222,3 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
         itemBuilder: animationItemBuilder((index) => icon[index]));
   }
 }
-
-
