@@ -32,6 +32,7 @@ class _AnimateSignInFieldsState extends State<AnimateSignInFields> {
       HeadText(),
 
       RectangularButton(text: 'Login', press: (){
+
         NavigateRoute.gotoPage(context, const SignInEmailPassword());
       }),
 

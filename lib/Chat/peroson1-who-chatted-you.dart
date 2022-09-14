@@ -30,7 +30,11 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
   String _message = "You are invited";
   final telephony = Telephony.instance;
 
+  List listUsers = [];
+
   List<String> phoneNumber = [];
+  List<String> firstName = [];
+
   List<UserModel> phoneNumbers = [];
   String? num = "";
   String? number = "";
@@ -50,21 +54,37 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
 
     for (int i = 0; i < document.length; i++) {
       phoneNumber.add(document[i]['phoneNumber']);
+      firstName.add(document[i]['firstName']);
+    }
+  }
+
+  List<dynamic> numberAccept = [];
+
+  getUserAccept() async {
+    final QuerySnapshot result = await FirebaseFirestore.instance
+        .collection('table-accept-request')
+        .get();
+    final List<DocumentSnapshot> document = result.docs;
+
+    DocumentSnapshot documentSnapshot = document[0];
+
+    for (int i = 0; i < document.length; i++) {
+      numberAccept.add(document[i]['Accept'][0]);
     }
 
-    print(num);
-    print("OKEYEYE");
+    print(numberAccept);
   }
 
   @override
   void initState() {
     super.initState();
+    getUserAccept();
     getContact();
     initPlatformState();
-    //getUsers();
-    contactList();
-    users();
+    getUsers();
+    //contactList();
 
+    // users();
   }
 
   void getContact() async {
@@ -100,54 +120,44 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
 
   List<DocumentSnapshot> document = [];
   UserModel? userModels;
-  List listUsers = [];
 
+  UserModel? userModel;
 
-
-
-  Future contactList()async {
-
+  contactList() async {
     for (int i = 0; i < contacts!.length; i++) {
       num = (contacts![i].phones.isNotEmpty)
           ? (contacts![i].phones.first.number)
           : "--";
-
 
       if (num![0].contains('0')) {
         number = num!.replaceRange(0, 1, '+63');
       } else {
         number = num;
       }
-      if(phoneNumber.contains(number)){
-
-      }
+      if (phoneNumber.contains(number)) {}
     }
-
   }
 
-  users()async{
-
-
-    final  result =
-    await FirebaseFirestore.instance
-        .collection('table-user')
-
-        .get();
-
-    for (var doc in result.docs) {
-      listUsers.add(doc.data());
-
-      phoneNumber.add(doc.data()['phoneNumber']);
-    }
-
-
-  }
-
-
+  // users()async{
+  //
+  //
+  //   final  result =
+  //   await FirebaseFirestore.instance
+  //       .collection('table-user')
+  //
+  //       .get();
+  //
+  //   for (var doc in result.docs) {
+  //     listUsers.add(doc.data());
+  //
+  //     phoneNumber.add(doc.data()['phoneNumber']);
+  //   }
+  //
+  //
+  // }
 
   @override
   Widget build(BuildContext context) {
-    contactList();
     final size = MediaQuery.of(context).size;
     return SafeArea(
         child: (contacts) == null
@@ -186,7 +196,7 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                   Expanded(
                     child: ListView.builder(
                       shrinkWrap: true,
-                      itemCount: phoneNumber.length,
+                      itemCount: contacts!.length,
                       itemBuilder: (BuildContext context, int index) {
                         Uint8List? image = contacts![index].photo;
                         String num = (contacts![index].phones.isNotEmpty)
@@ -194,9 +204,9 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                             : "--";
                         String number = "";
 
-                        if(num[0].contains('0')){
-                          number  = num.replaceRange(0,1, '+63');
-                        }else{
+                        if (num[0].contains('0')) {
+                          number = num.replaceRange(0, 1, '+63');
+                        } else {
                           number = num;
                         }
                         //return Text(listUsers[index]['firstName']);
@@ -284,27 +294,27 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                             phoneNumber.contains(number.replaceAll(" ", ""))
                                 ? (contacts![index].photo == null)
                                     ? Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: CircleAvatar(
-                                          backgroundColor: Colors.primaries[
-                                                  _random.nextInt(
-                                                      Colors.primaries.length)]
-                                              [_random.nextInt(9) * 100],
-                                          radius: 30,
-                                          child: Icon(
-                                            Icons.person,
-                                          )),
-                                    )
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: CircleAvatar(
+                                            backgroundColor: Colors.primaries[
+                                                    _random.nextInt(Colors
+                                                        .primaries.length)]
+                                                [_random.nextInt(9) * 100],
+                                            radius: 30,
+                                            child: Icon(
+                                              Icons.person,
+                                            )),
+                                      )
                                     : Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: CircleAvatar(
-                                          radius: 30,
-                                          backgroundImage: MemoryImage(image!)),
-                                    )
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: CircleAvatar(
+                                            radius: 30,
+                                            backgroundImage:
+                                                MemoryImage(image!)),
+                                      )
                                 : SizedBox.shrink(),
                             phoneNumber.contains(number.replaceAll(" ", ""))
                                 ? SizedBox(
-
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -313,12 +323,11 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                                           "  ${contacts![index].name.first} ${contacts![index].name.last}",
                                           style: GoogleFonts.lato(
                                             textStyle: const TextStyle(
-                                              fontSize: 12,
+                                                fontSize: 12,
                                                 color: Colors.blue,
                                                 letterSpacing: .5),
                                           ),
                                         ),
-
                                       ],
                                     ),
                                   )
@@ -326,37 +335,50 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                             Spacer(),
                             phoneNumber.contains(number.replaceAll(" ", ""))
                                 ? Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: OutlinedButton(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: OutlinedButton(
                                       onPressed: () async {
-                                        final QuerySnapshot result =
-                                            await FirebaseFirestore.instance
-                                                .collection('table-user')
-                                                .where('phoneNumber',
-                                                    isEqualTo: number
-                                                        .replaceAll(" ", ""))
-                                                .get();
-                                        final List<DocumentSnapshot> document =
-                                            result.docs;
-                                        UserModel? userModel;
-                                        DocumentSnapshot documentSnapshot =
-                                            document[0];
+                                        if (numberAccept.contains(
+                                            number.replaceAll(" ", ""))) {
+                                          final QuerySnapshot result =
+                                              await FirebaseFirestore.instance
+                                                  .collection('table-user')
+                                                  .where('phoneNumber',
+                                                      isEqualTo: number
+                                                          .replaceAll(" ", ""))
+                                                  .get();
+                                          final List<DocumentSnapshot>
+                                              document = result.docs;
+                                          UserModel? userModel;
+                                          DocumentSnapshot documentSnapshot =
+                                              document[0];
 
-                                        userModel =
-                                            UserModel.fromMap(documentSnapshot);
+                                          userModel = UserModel.fromMap(
+                                              documentSnapshot);
 
-                                        print(userModel);
-                                        NavigateRoute.gotoPage(context,
-                                            ChatConversation(user: userModel));
+                                          print(userModel);
+                                          NavigateRoute.gotoPage(
+                                              context,
+                                              ChatConversation(
+                                                  user: userModel));
+                                        }
                                       },
-                                      child: Text('Send Message',
-                                          style: GoogleFonts.lato(
-                                            textStyle: const TextStyle(
-                                                color: Colors.black,
-                                                letterSpacing: .5),
-                                          )),
+                                      child: numberAccept.contains(
+                                              number.replaceAll(" ", ""))
+                                          ? Text('Send Message',
+                                              style: GoogleFonts.lato(
+                                                textStyle: const TextStyle(
+                                                    color: Colors.black,
+                                                    letterSpacing: .5),
+                                              ))
+                                          : Text('Pending Request',
+                                              style: GoogleFonts.lato(
+                                                textStyle: const TextStyle(
+                                                    color: Colors.red,
+                                                    letterSpacing: .5),
+                                              )),
                                     ),
-                                )
+                                  )
                                 : SizedBox.shrink()
 
                             // OutlinedButton(onPressed: (){

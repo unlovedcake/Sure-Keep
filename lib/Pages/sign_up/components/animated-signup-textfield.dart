@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:auto_animated/auto_animated.dart';
 import 'package:cloud_firestore_platform_interface/src/timestamp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,8 +48,16 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
   String? genderValue;
   bool isGender = false;
 
-  DateTime? pickedDate;
+
+  DateTime? pickedDate = DateTime.now();
   final _formKey = GlobalKey<FormState>();
+
+  errorMessage(String error){
+    ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+      content: Text(error),
+      duration: const Duration(seconds: 3),
+    ));
+  }
 
   @override
   void initState() {
@@ -139,7 +149,7 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
                             formattedDate; //set output date to TextField value.
                       });
 
-                      print(dateinput.text);
+                      //print(dateinput.text);
                     } else {
                       print("Date is not selected");
                     }
@@ -147,9 +157,11 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
                 ),
               ),
             ),
-            const SizedBox(
-              height: Sizes.dimen_40,
-            ),
+            // const SizedBox(
+            //   height: Sizes.dimen_40,
+            // ),
+
+
             Gender(),
           ],
         ),
@@ -174,10 +186,21 @@ class _AnimateSignUpFieldsState extends State<AnimateSignUpFields> {
               // }
               ..imageUrl =
                   "https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?w=2000";
-            if (_formKey.currentState!.validate()) {
+
+            if(dateinput.text.isEmpty){
+              errorMessage('Birthdate is required');
+            }else if(firstNameController.text.isEmpty){
+              errorMessage('First name is required');
+            }else if(lastNameController.text.isEmpty){
+              errorMessage('Last name is required');
+            }else{
               NavigateRoute.gotoPage(
                   context, EmailPasswordTextFields(userModel: userModel));
             }
+            // if (_formKey.currentState!.validate()) {
+            //   NavigateRoute.gotoPage(
+            //       context, EmailPasswordTextFields(userModel: userModel));
+            // }
             // if (_formKey.currentState!.validate()) {
             //
             //

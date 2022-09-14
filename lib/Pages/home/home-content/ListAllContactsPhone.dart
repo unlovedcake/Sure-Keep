@@ -13,6 +13,7 @@ import 'package:flutter_contacts/contact.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sure_keep/Chat/chatConversation.dart';
 import 'package:sure_keep/Models/user-model.dart';
 import 'package:sure_keep/Router/navigate-route.dart';
@@ -24,9 +25,10 @@ onBackgroundMessage(SmsMessage message) {
 }
 
 class ListAllContactPhone extends StatefulWidget {
-
   final UserModel userData;
-  const ListAllContactPhone({required this.userData, Key? key}) : super(key: key);
+
+  const ListAllContactPhone({required this.userData, Key? key})
+      : super(key: key);
 
   @override
   State<ListAllContactPhone> createState() => _ListAllContactPhoneState();
@@ -34,40 +36,66 @@ class ListAllContactPhone extends StatefulWidget {
 
 class _ListAllContactPhoneState extends State<ListAllContactPhone> {
   List<Contact>? contacts;
-
+  User? user = FirebaseAuth.instance.currentUser;
   String _message = "You are invited";
   final telephony = Telephony.instance;
 
-  bool isAccept = false;
-
+  bool? _isAccept;
 
   List<String> phoneNumber = [];
+  List<dynamic> numberAccept = [];
+  List<String> isEqualTOphoneNumber = [];
+
+  List listUsers = [];
 
   final _random = Random();
 
-  getUsers()async {
-    final QuerySnapshot result = await FirebaseFirestore.instance
-        .collection('table-user')
-        .get();
+  getUsers() async {
+    final QuerySnapshot result =
+        await FirebaseFirestore.instance.collection('table-user').get();
     final List<DocumentSnapshot> document = result.docs;
-
 
     DocumentSnapshot documentSnapshot = document[0];
 
-    for(int i=0; i < document.length; i++){
-      //DocumentSnapshot documentSnapshot = document[i];
-      //userModel = UserModel.fromMap(result.docs);
-
-
+    for (int i = 0; i < document.length; i++) {
       phoneNumber.add(document[i]['phoneNumber']);
+    }
+  }
 
+  UserModel? userModels;
 
+  getCurrentUser() async {
+    try {
+      final QuerySnapshot result = await FirebaseFirestore.instance
+          .collection('table-user')
+          .where('email', isEqualTo: user!.email)
+          .get();
+      final List<DocumentSnapshot> document = result.docs;
+
+      DocumentSnapshot documentSnapshot = document[0];
+
+      userModels = UserModel.fromMap(documentSnapshot);
+
+      print(userModels!.firstName.toString());
+      print("KAKAKAKA");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  getUserAccept() async {
+    final QuerySnapshot result = await FirebaseFirestore.instance
+        .collection('table-accept-request')
+        .get();
+    final List<DocumentSnapshot> document = result.docs;
+
+    DocumentSnapshot documentSnapshot = document[0];
+
+    for (int i = 0; i < document.length; i++) {
+      numberAccept.add(document[i]['Accept'][0]);
     }
 
-    print(phoneNumber);
-    print("OKEYEYE");
-
-
+    print(numberAccept);
   }
 
   @override
@@ -76,7 +104,10 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     getContact();
     initPlatformState();
     getUsers();
+    getUserAccept();
     loadFCM();
+    isAccepts();
+    getCurrentUser();
   }
 
   void getContact() async {
@@ -99,10 +130,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     });
   }
 
-
   Future<void> initPlatformState() async {
-
-
     final bool? result = await telephony.requestPhoneAndSmsPermissions;
 
     if (result != null && result) {
@@ -113,8 +141,6 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     if (!mounted) return;
   }
 
-
-
   void sendPushMessage(String token, String title, String body) async {
     try {
       await http.post(
@@ -122,7 +148,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
         headers: <String, String>{
           'Content-Type': 'application/json',
           'Authorization':
-          'key=AAAA46pw8dw:APA91bH16DQMBlHChehqWl-REs6Y4pkEVqOTtME1yRgGvN-8yrQcy5uwzXDW_HbR_jK2o_sGwjTo-rWKVXkbz62nMKJN3lqrhWCrkxMN7XG4D32V3utQlgHLUvmwhAdIgnVDIkOLJRCJ',
+              'key=AAAA46pw8dw:APA91bH16DQMBlHChehqWl-REs6Y4pkEVqOTtME1yRgGvN-8yrQcy5uwzXDW_HbR_jK2o_sGwjTo-rWKVXkbz62nMKJN3lqrhWCrkxMN7XG4D32V3utQlgHLUvmwhAdIgnVDIkOLJRCJ',
         },
         body: jsonEncode(
           <String, dynamic>{
@@ -137,29 +163,24 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
           },
         ),
       );
-
     } catch (e) {
       print("error push notification");
     }
   }
 
   void loadFCM() async {
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
   }
 
-
-
-  void loadSend(String email) async {
-
+  void loadSend(String phoneNumber, String id) async {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
-
-
 
       bool isallowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isallowed) {
@@ -167,48 +188,49 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
         AwesomeNotifications().requestPermissionToSendNotifications();
       } else {
         if (notification != null && android != null && !kIsWeb) {
-
-
           //show notification
           AwesomeNotifications().createNotification(
-              content: NotificationContent( //simgple notification
+              content: NotificationContent(
+                  //simgple notification
                   id: 123,
                   channelKey: 'basic',
                   //set configuration wuth key "basic"
                   title: notification.title,
                   body: notification.body,
-                  payload: {"email": email},
+                  payload: {"phoneNumber": phoneNumber, "id": id},
                   autoDismissible: false,
                   //bigPicture: widget.user.imageUrl,
-                  roundedBigPicture: true
-
-              ),
-
+                  roundedBigPicture: true),
               actionButtons: [
                 NotificationActionButton(
                   key: "Accept",
                   label: "Accept",
                 ),
-
                 NotificationActionButton(
                   key: "Decline",
                   label: "Decline",
                 )
-              ]
-          );
+              ]);
         }
       }
-
     });
+  }
+
+  Future<bool?> isAccepts(
 
 
+      ) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? _isAppBackGround = prefs.getBool('accept') ?? false;
+    _isAccept = _isAppBackGround;
+
+    return _isAccept;
   }
 
   @override
   Widget build(BuildContext context) {
-
-
     final size = MediaQuery.of(context).size;
+
     return SafeArea(
         child: (contacts) == null
             ? Center(child: CircularProgressIndicator())
@@ -254,9 +276,9 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                             : "--";
                         String number = "";
 
-                        if(num[0].contains('0')){
-                          number  = num.replaceRange(0,1, '+63');
-                        }else{
+                        if (num[0].contains('0')) {
+                          number = num.replaceRange(0, 1, '+63');
+                        } else {
                           number = num;
                         }
 
@@ -265,7 +287,6 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                         // }else{
                         //   number = num;
                         // }
-
 
                         // return ListTile(
                         //     leading: (contacts![index].photo == null)
@@ -299,104 +320,228 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                         //       }
                         //     });
 
-                        return Container(
-                          margin: EdgeInsets.all(8),
-                          child: Wrap(
-                            //spacing: 4,
-                            runSpacing: 4,
-                            alignment: WrapAlignment.spaceAround,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-
-
-                            children: [
-                              (contacts![index].photo == null)
-                                  ? CircleAvatar(
-                                backgroundColor:  Colors.primaries[_random.nextInt(Colors.primaries.length)]
-                            [_random.nextInt(9) * 100],
-                                  radius: 30,
-                                      child: Icon(Icons.person,))
-                                  : CircleAvatar(
-                                radius: 30,
-                                      backgroundImage: MemoryImage(image!)),
-                          SizedBox(
-                            width: 200,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                           "  ${contacts![index].name.first} ${contacts![index].name.last}",
-                                  style: GoogleFonts.lato(
-                                    textStyle: const TextStyle(color: Colors.blue, letterSpacing: .5),
-                                  ),),
-                                Text('  $num'),
-                              ],
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ListTile(
+                            leading: (contacts![index].photo == null)
+                                ? CircleAvatar(
+                                    backgroundColor: Colors.primaries[_random
+                                            .nextInt(Colors.primaries.length)]
+                                        [_random.nextInt(9) * 100],
+                                    radius: 30,
+                                    child: Icon(
+                                      Icons.person,
+                                    ))
+                                : CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage: MemoryImage(image!)),
+                            title: SizedBox(
+                              width: 200,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "  ${contacts![index].name.first} ${contacts![index].name.last}",
+                                    style: GoogleFonts.lato(
+                                      textStyle: const TextStyle(
+                                          color: Colors.blue,
+                                          fontSize: 14,
+                                          letterSpacing: .5),
+                                    ),
+                                  ),
+                                  Text(
+                                    '  $num',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            trailing: phoneNumber
+                                    .contains(number.replaceAll(" ", ""))
+                                ? OutlinedButton(
+                                    onPressed: () async {
 
 
-                              phoneNumber.contains(number.replaceAll(" ", "")) ?
-                              OutlinedButton(onPressed: () async{
-                                UserModel? userModel;
-                                User? user = FirebaseAuth.instance.currentUser;
+                                      UserModel? userModel;
+                                      User? user =
+                                          FirebaseAuth.instance.currentUser;
 
-                                final QuerySnapshot result = await FirebaseFirestore.instance
-                                    .collection('table-user')
-                                    .where('phoneNumber', isEqualTo: number.replaceAll(" ", "") )
-                                    .get();
-                                final List<DocumentSnapshot> document = result.docs;
+                                      final QuerySnapshot result =
+                                          await FirebaseFirestore.instance
+                                              .collection('table-user')
+                                              .where('phoneNumber',
+                                                  isEqualTo: number.replaceAll(
+                                                      " ", ""))
+                                              .get();
+                                      final List<DocumentSnapshot> document =
+                                          result.docs;
 
-                                DocumentSnapshot documentSnapshot = document[0];
+                                      DocumentSnapshot documentSnapshot =
+                                          document[0];
 
-                                userModel = UserModel.fromMap( documentSnapshot);
+                                      userModel =
+                                          UserModel.fromMap(documentSnapshot);
 
+                                      //NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
 
-                                 //NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
-                                await FirebaseFirestore.instance
-                                    .collection('table-user')
-                                    .doc(userModel.docID)
-                                    .update({
-                                  "Accept":
-                                  FieldValue.arrayUnion([user!.email],),
-                                }).whenComplete(() async {
+                                      if( !numberAccept.contains(
+                                          number.replaceAll(" ", ""))){
 
-                                  sendPushMessage(userModel!.token.toString(), user.displayName.toString(),"Send you a request");
-                                  loadSend(user.email.toString());
-                                  // Future.delayed(Duration(seconds: 2)).then((value) async{
-                                  //   await CircularProgressIndicator();
-                                  //    Navigator.pop(context);
-                                     Fluttertoast.showToast(msg: "Request sent...");
-                                });
+                                        await FirebaseFirestore.instance
+                                            .collection('table-accept-request')
+                                            .add({
+                                          "from": user!.email,
+                                          "to": userModel.email,
+                                          // "Accept": FieldValue.arrayUnion(
+                                          //   [""],
+                                          // ),
+                                        }).then((val) async {
+                                          sendPushMessage(
+                                              userModel!.token.toString(),
+                                              user.displayName.toString(),
+                                              "Send you a request");
+                                          loadSend(
+                                              userModel.phoneNumber.toString(),val.id);
+                                          // Future.delayed(Duration(seconds: 2)).then((value) async{
+                                          //   await CircularProgressIndicator();
+                                          //    Navigator.pop(context);
+                                          Fluttertoast.showToast(
+                                              msg: "Request sent...");
+                                        });
+                                      }
 
+                                    },
+                                    child: numberAccept.contains(
+                                            number.replaceAll(" ", ""))
+                                        ? Text('Connected',
+                                            style: GoogleFonts.lato(
+                                              textStyle: const TextStyle(
+                                                  color: Colors.red,
+                                                  letterSpacing: .5),
+                                            ))
+                                        : Text('Connect',
+                                            style: GoogleFonts.lato(
+                                              textStyle: const TextStyle(
+                                                  color: Colors.red,
+                                                  letterSpacing: .5),
+                                            )),
+                                  )
+                                : OutlinedButton(
+                                    onPressed: () {
+                                      _showAlertDialogInvite(
+                                          num, contacts![index].name.first);
 
-
-
-                              }, child: isAccept == true ? Text('Connected'):Text('Connect',style: GoogleFonts.lato(
-                                textStyle: const TextStyle(color: Colors.red, letterSpacing: .5),
-                              )),)
-                              : OutlinedButton(onPressed: (){
-                                _showAlertDialogInvite(contacts![index].name.first);
-
-                                // telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
-                                //     " https://www.facebook.com/kissiney.sweet ");
-
-                              }, child: Text('Invite',  style: GoogleFonts.lato(
-                              textStyle: const TextStyle(color: Colors.blue, letterSpacing: .5),
-                              ),)),
-
-
-                              // OutlinedButton(onPressed: (){
-                              //   if(!phoneNumber.contains(number)){
-                              //     telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
-                              //         " https://www.facebook.com/kissiney.sweet ");
-                              //   }else{
-                              //     NavigateRoute.gotoPage(context, ChatConversation(user: widget.userData));
-                              //   }
-                              //
-                              // }, child: phoneNumber.contains(number.replaceAll(" ", "")) ? Text("Connect",style: TextStyle(color: Colors.red)): Text("Invite",style: TextStyle(color: Colors.green),)),
-                              //
-                            ],
+                                      // telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                                      //     " https://www.facebook.com/kissiney.sweet ");
+                                    },
+                                    child: Text(
+                                      'Invite',
+                                      style: GoogleFonts.lato(
+                                        textStyle: const TextStyle(
+                                            color: Colors.blue,
+                                            letterSpacing: .5),
+                                      ),
+                                    )),
                           ),
                         );
+                        // return Container(
+                        //   margin: EdgeInsets.all(8),
+                        //   child: Wrap(
+                        //     //spacing: 4,
+                        //     runSpacing: 4,
+                        //     alignment: WrapAlignment.spaceAround,
+                        //     crossAxisAlignment: WrapCrossAlignment.center,
+                        //
+                        //
+                        //     children: [
+                        //       (contacts![index].photo == null)
+                        //           ? CircleAvatar(
+                        //         backgroundColor:  Colors.primaries[_random.nextInt(Colors.primaries.length)]
+                        //     [_random.nextInt(9) * 100],
+                        //           radius: 30,
+                        //               child: Icon(Icons.person,))
+                        //           : CircleAvatar(
+                        //         radius: 30,
+                        //               backgroundImage: MemoryImage(image!)),
+                        //   SizedBox(
+                        //     width: 200,
+                        //     child: Column(
+                        //       crossAxisAlignment: CrossAxisAlignment.start,
+                        //       children: [
+                        //         Text(
+                        //                    "  ${contacts![index].name.first} ${contacts![index].name.last}",
+                        //           style: GoogleFonts.lato(
+                        //             textStyle: const TextStyle(color: Colors.blue, letterSpacing: .5),
+                        //           ),),
+                        //         Text('  $num'),
+                        //       ],
+                        //     ),
+                        //   ),
+                        //
+                        //
+                        //       phoneNumber.contains(number.replaceAll(" ", "")) ?
+                        //       OutlinedButton(onPressed: () async{
+                        //         UserModel? userModel;
+                        //         User? user = FirebaseAuth.instance.currentUser;
+                        //
+                        //         final QuerySnapshot result = await FirebaseFirestore.instance
+                        //             .collection('table-user')
+                        //             .where('phoneNumber', isEqualTo: number.replaceAll(" ", "") )
+                        //             .get();
+                        //         final List<DocumentSnapshot> document = result.docs;
+                        //
+                        //         DocumentSnapshot documentSnapshot = document[0];
+                        //
+                        //         userModel = UserModel.fromMap( documentSnapshot);
+                        //
+                        //
+                        //          //NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
+                        //         await FirebaseFirestore.instance
+                        //             .collection('table-user')
+                        //             .doc(userModel.docID)
+                        //             .update({
+                        //           "Accept":
+                        //           FieldValue.arrayUnion([user!.email],),
+                        //         }).whenComplete(() async {
+                        //
+                        //           sendPushMessage(userModel!.token.toString(), user.displayName.toString(),"Send you a request");
+                        //           loadSend(user.email.toString());
+                        //           // Future.delayed(Duration(seconds: 2)).then((value) async{
+                        //           //   await CircularProgressIndicator();
+                        //           //    Navigator.pop(context);
+                        //              Fluttertoast.showToast(msg: "Request sent...");
+                        //         });
+                        //
+                        //
+                        //
+                        //
+                        //       }, child: isAccept == true ? Text('Connected'):Text('Connect',style: GoogleFonts.lato(
+                        //         textStyle: const TextStyle(color: Colors.red, letterSpacing: .5),
+                        //       )),)
+                        //       : OutlinedButton(onPressed: (){
+                        //         _showAlertDialogInvite(num,contacts![index].name.first);
+                        //
+                        //         // telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                        //         //     " https://www.facebook.com/kissiney.sweet ");
+                        //
+                        //       }, child: Text('Invite',  style: GoogleFonts.lato(
+                        //       textStyle: const TextStyle(color: Colors.blue, letterSpacing: .5),
+                        //       ),)),
+                        //
+                        //
+                        //       // OutlinedButton(onPressed: (){
+                        //       //   if(!phoneNumber.contains(number)){
+                        //       //     telephony.sendSms(to: num, message: "${contacts![index].name.first} invited you to download Sure Keep App at.\n"
+                        //       //         " https://www.facebook.com/kissiney.sweet ");
+                        //       //   }else{
+                        //       //     NavigateRoute.gotoPage(context, ChatConversation(user: widget.userData));
+                        //       //   }
+                        //       //
+                        //       // }, child: phoneNumber.contains(number.replaceAll(" ", "")) ? Text("Connect",style: TextStyle(color: Colors.red)): Text("Invite",style: TextStyle(color: Colors.green),)),
+                        //       //
+                        //     ],
+                        //   ),
+                        // );
                       },
                     ),
                   ),
@@ -404,20 +549,18 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
               ));
   }
 
-  _showAlertDialogInvite(String name){
+  _showAlertDialogInvite(String num, String name) {
+    User? user = FirebaseAuth.instance.currentUser;
+
     showDialog(
         context: context,
         barrierDismissible: true,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text(
-              'Invite Other',
-              style: TextStyle(fontSize: 18)
-            ),
+            title: Text('Invite Other', style: TextStyle(fontSize: 18)),
             content: SingleChildScrollView(
               child: ListBody(
                 children: [
-
                   Text(
                     'Would you like to invite $name to download this app ?',
                     style: Theme.of(context).textTheme.bodyText1,
@@ -426,25 +569,36 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
               ),
             ),
             actions: <Widget>[
-
               TextButton(
-                child: const Text('No',style: TextStyle(color: Colors.red),),
+                child: const Text('Yes'),
                 onPressed: () {
+                  telephony.sendSms(
+                      to: num,
+                      message:
+                          '${user!.displayName} invited you to download Sure Keep App at.\n" '
+                          " https://www.facebook.com/kissiney.sweet ");
+
                   Navigator.of(context).pop();
+
+                  Fluttertoast.showToast(
+                    timeInSecForIosWeb: 3,
+                    msg: 'Message sent ',
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.CENTER_RIGHT,
+                  );
                 },
               ),
               TextButton(
-                child: const Text('Yes'),
+                child: const Text(
+                  'No',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
             ],
           );
-  });
+        });
   }
-
-
-
-
 }

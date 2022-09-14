@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,89 +51,100 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
                 onPressed: (val) {
                   _showModalBottomSheet();
                 },
-                title: const Text('Encrypt Message'),
+                title: Text('Encrypt Message',style: GoogleFonts.lato(
+                  textStyle:  TextStyle(fontSize: 18, letterSpacing: .5),),),
                 description:
-                    const Text('Set duration time for encrypted message'),
+                     Text('Set duration time for encrypted message',style: TextStyle(color: Colors.grey[500],fontSize: 12),),
               ),
               SettingsTile(
                 onPressed: (val){
                   NavigateRoute.gotoPage(context, const SetDefaultConversation());
                 },
-                title: Text('Set Default Conversation'),
-                description: Text('Person you want to show your conversation'),
+                title: Text('Set Default Conversation',style: GoogleFonts.lato(
+    textStyle:  TextStyle(fontSize: 18, letterSpacing: .5),),),
+                description: Text('Person you want to show your conversation',style: TextStyle(color: Colors.grey[500],fontSize: 12),),
               ),
-            ],
-          ),
-          SettingsSection(
-            title: Text('Conservation'),
-            tiles: [
-              SettingsTile(
-                title: Text('Conservations'),
-                description: Text('No priority conservations'),
-              ),
-              SettingsTile(
-                title: Text('Bubbles'),
-                description: Text(
-                  'On / Conservations can appear as floating icons',
-                ),
-              ),
-            ],
-          ),
-          SettingsSection(
-            title: Text('Privacy'),
-            tiles: [
-              SettingsTile(
-                title: Text('Device & app notifications'),
-                description: Text(
-                  'Control which apps and devices can read notifications',
-                ),
-              ),
-              SettingsTile(
-                title: Text('Notifications on lock screen'),
-                description: Text('Show conversations, default, and silent'),
-              ),
-            ],
-          ),
-          SettingsSection(
-            title: Text('General'),
-            tiles: [
-              SettingsTile(
-                title: Text('Do Not Disturb'),
-                description: Text('Off / 1 schedule can turn on automatically'),
-              ),
-              SettingsTile(
-                title: Text('Wireless emergency alerts'),
-              ),
-              SettingsTile.switchTile(
-                initialValue: false,
-                onToggle: (_) {},
-                title: Text('Hide silent notifications in status bar'),
-              ),
-              SettingsTile.switchTile(
-                initialValue: false,
-                onToggle: (_) {},
-                title: Text('Allow notification snoozing'),
-              ),
-              SettingsTile.switchTile(
-                initialValue: useNotificationDotOnAppIcon,
-                onToggle: (value) {
-                  setState(() {
-                    useNotificationDotOnAppIcon = value;
-                    print(useNotificationDotOnAppIcon);
-                  });
-                },
-                title: Text('Notification dot on app icon'),
-              ),
+
               SettingsTile(
                 onPressed: (val) {
                   AuthProvider.logout(context);
                 },
-                trailing: Icon(Icons.logout),
-                title: Text('Logout'),
+                trailing: Icon(Icons.logout,color: Colors.red,),
+                title: Text('Logout',style: GoogleFonts.lato(
+    textStyle:  TextStyle(fontSize: 18, letterSpacing: .5),),),
               ),
             ],
           ),
-        ],
+          // SettingsSection(
+          //   title: Text('Conservation'),
+          //   tiles: [
+          //     SettingsTile(
+          //       title: Text('Conservations'),
+          //       description: Text('No priority conservations'),
+          //     ),
+          //     SettingsTile(
+          //       title: Text('Bubbles'),
+          //       description: Text(
+          //         'On / Conservations can appear as floating icons',
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // SettingsSection(
+          //   title: Text('Privacy'),
+          //   tiles: [
+          //     SettingsTile(
+          //       title: Text('Device & app notifications'),
+          //       description: Text(
+          //         'Control which apps and devices can read notifications',
+          //       ),
+          //     ),
+          //     SettingsTile(
+          //       title: Text('Notifications on lock screen'),
+          //       description: Text('Show conversations, default, and silent'),
+          //     ),
+          //   ],
+          // ),
+          // SettingsSection(
+          //   title: Text('General'),
+          //   tiles: [
+              // SettingsTile(
+              //   title: Text('Do Not Disturb'),
+              //   description: Text('Off / 1 schedule can turn on automatically'),
+              // ),
+              // SettingsTile(
+              //   title: Text('Wireless emergency alerts'),
+              // ),
+              // SettingsTile.switchTile(
+              //   initialValue: false,
+              //   onToggle: (_) {},
+              //   title: Text('Hide silent notifications in status bar'),
+              // ),
+              // SettingsTile.switchTile(
+              //   initialValue: false,
+              //   onToggle: (_) {},
+              //   title: Text('Allow notification snoozing'),
+              // ),
+              // SettingsTile.switchTile(
+              //   initialValue: useNotificationDotOnAppIcon,
+              //   onToggle: (value) {
+              //     setState(() {
+              //       useNotificationDotOnAppIcon = value;
+              //       print(useNotificationDotOnAppIcon);
+              //     });
+              //   },
+              //   title: Text('Notification dot on app icon'),
+              // ),
+              // SettingsTile(
+              //   onPressed: (val) {
+              //     AuthProvider.logout(context);
+              //   },
+              //   trailing: Icon(Icons.logout),
+              //   title: Text('Logout'),
+              // ),
+            ],
+          //),
+        //],
       ),
     );
   }

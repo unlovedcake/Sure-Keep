@@ -20,7 +20,7 @@ class SearchUserFound extends StatelessWidget {
     final image = NetworkImage(user.imageUrl.toString());
 
     return   ClipRRect(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(60),
       child: Hero(
         tag:  user.docID.toString(),
         child: CachedNetworkImage(
@@ -66,6 +66,7 @@ class SearchUserFound extends StatelessWidget {
                   child: Container(
                     padding: EdgeInsets.all(12),
                     width: size.width,
+                    height: 250,
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         gradient:  LinearGradient(
@@ -158,7 +159,7 @@ class SearchUserFound extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  height: 40,
+                  height: 80,
                 ),
 
 
@@ -180,40 +181,8 @@ class SearchUserFound extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
-                Wrap(
-                  spacing: 20,
-                  children: [
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Photos',
-                        style: TextStyle(fontSize: 15, color: Colors.black),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Videos',
-                        style: TextStyle(fontSize: 15, color: Colors.black),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Tagged',
-                        style: TextStyle(fontSize: 15, color: Colors.black),
-                      ),
-                    )
-                  ],
-                ),
-                Expanded(
-                    child: Center(
-                        child: Container(
-                          child: Text("You don't have any videos yet."),
-                        )))
+
+
               ],
             ),
           ),

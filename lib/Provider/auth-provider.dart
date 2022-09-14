@@ -116,6 +116,7 @@ class AuthProvider extends ChangeNotifier {
           await _auth.signInWithCredential(credential).then((value) {
             _otpCode = credential.smsCode!;
 
+
             Navigator.pop(context);
             NavigateRoute.gotoPage(context, const OTPVerificationCode());
 
@@ -182,7 +183,7 @@ class AuthProvider extends ChangeNotifier {
 
           print("Code Timeout");
         },
-        timeout: const Duration(seconds: 60),
+        timeout: const Duration(seconds: 30),
       );
       notifyListeners();
     } catch (e) {
@@ -256,7 +257,6 @@ class AuthProvider extends ChangeNotifier {
       user = userCredential.user;
 
       userModel.docID = user!.uid;
-
       String phoneNum =
           Provider.of<AuthProvider>(context, listen: false).getPhoneNumber;
 
@@ -265,6 +265,7 @@ class AuthProvider extends ChangeNotifier {
 
       await user!.updateDisplayName(userModel.firstName);
       await user!.updatePhotoURL(userModel.imageUrl);
+
 
       await user!.reload();
       user = _auth.currentUser;

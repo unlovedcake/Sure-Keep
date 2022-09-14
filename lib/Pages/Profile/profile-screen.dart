@@ -19,186 +19,186 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-   return SingleChildScrollView(
-     child: Center(
-       child: SizedBox(
-         height: size.height,
-         child: Column(
-           children: [
-             ClipPath(
-              clipper: CurveClipper(),
-               child: Container(
-                 padding: EdgeInsets.all(12),
-                 width: size.width,
-                 height: 250,
-                 decoration: BoxDecoration(
-                     borderRadius: BorderRadius.circular(12),
-                     gradient:  LinearGradient(
-                         begin: Alignment.topCenter,
-                         end: Alignment.bottomCenter,
-                         colors: [
-                           AppColors.darkPrimary,
-                           AppColors.logoColor,
-                         ]
-                     ),
-                     boxShadow: const [
-                       BoxShadow(
-                         offset: Offset(3,3),
-                         spreadRadius: 1,
-                         blurRadius: 4,
-                         color:  AppColors.darkShadow,
-                       ),
-                       BoxShadow(
-                         offset: Offset(-5,-5),
-                         spreadRadius: 1,
-                         blurRadius: 2,
-                         color:  AppColors.lightShadow,
-                       ),
-                     ]
-                 ),
-                 child: Column(
-                   children: [
+   return Center(
+     child: SizedBox(
+       height: size.height,
+       child: Column(
 
-                     ImageProfileWidget(user: user),
-                     // Container(
-                     //   padding: EdgeInsets.only(top: 20),
-                     //   child: ClipOval(
-                     //     child: CachedNetworkImage(
-                     //       imageUrl: "${user.imageUrl}",
-                     //       width: 100.0,
-                     //       height: 100.0,
-                     //     ),
-                     //   ),
-                     // ),
-
-                     SizedBox(
-                       height: Sizes.dimen_10,
+         children: [
+           ClipPath(
+            clipper: CurveClipper(),
+             child: Container(
+               padding: EdgeInsets.all(12),
+               width: size.width,
+               height: 250,
+               decoration: BoxDecoration(
+                   borderRadius: BorderRadius.circular(12),
+                   gradient:  LinearGradient(
+                       begin: Alignment.topCenter,
+                       end: Alignment.bottomCenter,
+                       colors: [
+                         AppColors.darkPrimary,
+                         AppColors.logoColor,
+                       ]
+                   ),
+                   boxShadow: const [
+                     BoxShadow(
+                       offset: Offset(3,3),
+                       spreadRadius: 1,
+                       blurRadius: 4,
+                       color:  AppColors.darkShadow,
                      ),
-                     Text(
-                       "${user.firstName}",
-                       //acessing the name property of the  MyPlatforms class
-                       style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+                     BoxShadow(
+                       offset: Offset(-5,-5),
+                       spreadRadius: 1,
+                       blurRadius: 2,
+                       color:  AppColors.lightShadow,
                      ),
+                   ]
+               ),
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.center,
+                 children: [
 
-                     SizedBox(
-                       height: Sizes.dimen_10,
-                     ),
+                   ImageProfileWidget(user: user),
+                   // Container(
+                   //   padding: EdgeInsets.only(top: 20),
+                   //   child: ClipOval(
+                   //     child: CachedNetworkImage(
+                   //       imageUrl: "${user.imageUrl}",
+                   //       width: 100.0,
+                   //       height: 100.0,
+                   //     ),
+                   //   ),
+                   // ),
 
-                     // Wrap(
-                     //   spacing: 20,
-                     //   children: [
-                     //     Wrap(
-                     //       direction: Axis.vertical,
-                     //       crossAxisAlignment: WrapCrossAlignment.center,
-                     //       spacing: 6,
-                     //       children: const [
-                     //         Text("143"),
-                     //         Text(
-                     //           "Following",
-                     //           //acessing the name property of the  MyPlatforms class
-                     //           style: TextStyle(fontSize: 14, color: Colors.grey),
-                     //         ),
-                     //       ],
-                     //     ),
-                     //     Wrap(
-                     //       direction: Axis.vertical,
-                     //       crossAxisAlignment: WrapCrossAlignment.center,
-                     //       spacing: 6,
-                     //       children: const [
-                     //         Text("143"),
-                     //         Text(
-                     //           "Followers",
-                     //           //acessing the name property of the  MyPlatforms class
-                     //           style: TextStyle(fontSize: 14, color: Colors.grey),
-                     //         ),
-                     //       ],
-                     //     ),
-                     //     Wrap(
-                     //       direction: Axis.vertical,
-                     //       crossAxisAlignment: WrapCrossAlignment.center,
-                     //       spacing: 6,
-                     //       children: const [
-                     //         Text("143"),
-                     //         Text(
-                     //           "Like",
-                     //           //acessing the name property of the  MyPlatforms class
-                     //           style: TextStyle(fontSize: 14, color: Colors.grey),
-                     //         ),
-                     //       ],
-                     //     ),
-                     //   ],
-                     // ),
-                   ],
-                 ),
+                   SizedBox(
+                     height: Sizes.dimen_10,
+                   ),
+                   Text(
+                     "${user.firstName}",
+                     //acessing the name property of the  MyPlatforms class
+                     style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold),
+                   ),
+
+                   SizedBox(
+                     height: Sizes.dimen_10,
+                   ),
+
+                   // Wrap(
+                   //   spacing: 20,
+                   //   children: [
+                   //     Wrap(
+                   //       direction: Axis.vertical,
+                   //       crossAxisAlignment: WrapCrossAlignment.center,
+                   //       spacing: 6,
+                   //       children: const [
+                   //         Text("143"),
+                   //         Text(
+                   //           "Following",
+                   //           //acessing the name property of the  MyPlatforms class
+                   //           style: TextStyle(fontSize: 14, color: Colors.grey),
+                   //         ),
+                   //       ],
+                   //     ),
+                   //     Wrap(
+                   //       direction: Axis.vertical,
+                   //       crossAxisAlignment: WrapCrossAlignment.center,
+                   //       spacing: 6,
+                   //       children: const [
+                   //         Text("143"),
+                   //         Text(
+                   //           "Followers",
+                   //           //acessing the name property of the  MyPlatforms class
+                   //           style: TextStyle(fontSize: 14, color: Colors.grey),
+                   //         ),
+                   //       ],
+                   //     ),
+                   //     Wrap(
+                   //       direction: Axis.vertical,
+                   //       crossAxisAlignment: WrapCrossAlignment.center,
+                   //       spacing: 6,
+                   //       children: const [
+                   //         Text("143"),
+                   //         Text(
+                   //           "Like",
+                   //           //acessing the name property of the  MyPlatforms class
+                   //           style: TextStyle(fontSize: 14, color: Colors.grey),
+                   //         ),
+                   //       ],
+                   //     ),
+                   //   ],
+                   // ),
+                 ],
                ),
              ),
-             SizedBox(
-               height: 40,
-             ),
+           ),
+           SizedBox(
+             height: 40,
+           ),
 
 
-             Wrap(
-               spacing: 40,
-               children: [
-                 OutlinedButton(
-                     onPressed: () {
-
-                       NavigateRoute.gotoPage(context, EditProfile(user: user));
-                     },
-                     child: const Text(
-                       "Edit",
-                       style: TextStyle(fontSize: 15),
-                     )),
-                 OutlinedButton(
-                   style: OutlinedButton.styleFrom(
-                     backgroundColor: Colors.black, //<-- SEE HERE
-                   ),
+           Wrap(
+             spacing: 40,
+             children: [
+               OutlinedButton(
                    onPressed: () {
-                     NavigateRoute.gotoPage(context,const AndroidSettingsScreen());
+
+                     NavigateRoute.gotoPage(context, EditProfile(user: user));
                    },
                    child: const Text(
-                     'Settings',
-                     style: TextStyle(fontSize: 15, color: Colors.white),
-                   ),
+                     "Edit",
+                     style: TextStyle(fontSize: 15),
+                   )),
+               OutlinedButton(
+                 style: OutlinedButton.styleFrom(
+                   //backgroundColor: Colors.black, //<-- SEE HERE
                  ),
-               ],
-             ),
-             const SizedBox(
-               height: 30,
-             ),
-             Wrap(
-               spacing: 20,
-               children: [
-                 TextButton(
-                   onPressed: () {},
-                   child: const Text(
-                     'Photos',
-                     style: TextStyle(fontSize: 15, color: Colors.black),
-                   ),
+                 onPressed: () {
+                   NavigateRoute.gotoPage(context,const AndroidSettingsScreen());
+                 },
+                 child: const Text(
+                   'Settings',
+                   style: TextStyle(fontSize: 15, color: Colors.black),
                  ),
-                 TextButton(
-                   onPressed: () {},
-                   child: const Text(
-                     'Videos',
-                     style: TextStyle(fontSize: 15, color: Colors.black),
-                   ),
-                 ),
-                 TextButton(
-                   onPressed: () {},
-                   child: const Text(
-                     'Tagged',
-                     style: TextStyle(fontSize: 15, color: Colors.black),
-                   ),
-                 )
-               ],
-             ),
-             Expanded(
-                 child: Center(
-                     child: Container(
-                       child: Text("You don't have any videos yet."),
-                     )))
-           ],
-         ),
+               ),
+             ],
+           ),
+           const SizedBox(
+             height: 30,
+           ),
+           // Wrap(
+           //   spacing: 20,
+           //   children: [
+           //     TextButton(
+           //       onPressed: () {},
+           //       child: const Text(
+           //         'Photos',
+           //         style: TextStyle(fontSize: 15, color: Colors.black),
+           //       ),
+           //     ),
+           //     TextButton(
+           //       onPressed: () {},
+           //       child: const Text(
+           //         'Videos',
+           //         style: TextStyle(fontSize: 15, color: Colors.black),
+           //       ),
+           //     ),
+           //     TextButton(
+           //       onPressed: () {},
+           //       child: const Text(
+           //         'Tagged',
+           //         style: TextStyle(fontSize: 15, color: Colors.black),
+           //       ),
+           //     )
+           //   ],
+           // ),
+           // Expanded(
+           //     child: Center(
+           //         child: Container(
+           //           child: Text("You don't have any videos yet."),
+           //         ))),
+         ],
        ),
      ),
    );
