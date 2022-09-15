@@ -24,10 +24,13 @@ import 'package:intl/intl.dart';
 
 class EmailPasswordTextFields extends StatefulWidget {
   final UserModel userModel;
-  const EmailPasswordTextFields({required this.userModel, Key? key}) : super(key: key);
+
+  const EmailPasswordTextFields({required this.userModel, Key? key})
+      : super(key: key);
 
   @override
-  State<EmailPasswordTextFields> createState() => _EmailPasswordTextFieldsState();
+  State<EmailPasswordTextFields> createState() =>
+      _EmailPasswordTextFieldsState();
 }
 
 class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
@@ -36,6 +39,7 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
   TextEditingController fakeController = TextEditingController();
   TextEditingController dateinput = TextEditingController();
 
@@ -46,27 +50,24 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
   String? genderValue;
   bool isGender = false;
 
+
   final _formKey = GlobalKey<FormState>();
 
-
-
-
-
+  errorMessage(String error) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(error),
+      duration: const Duration(seconds: 3),
+    ));
+  }
 
   @override
   void initState() {
-
-
     icon = [
       const HeaderSignUp(),
       Form(
         key: _formKey,
         child: Column(
-
           children: [
-
-
-
             RectangularInputField(
               sufixIcon: null,
               controller: emailController,
@@ -81,6 +82,25 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
               validator: (value) {
                 if (value!.isEmpty) {
                   return ("Email  is required");
+                }
+              },
+            ),
+            RectangularInputField(
+              sufixIcon: null,
+              controller: fakeController,
+              textInputType: TextInputType.text,
+              hintText: 'Fake Password',
+              icon: const Icon(
+                Icons.lock,
+                color: Colors.orange,
+              ),
+              obscureText: true,
+              onChanged: (val) {},
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return ("Fake Password  is required");
+                } else if (passwordController.text == fakeController.text) {
+                  return ("Fake Password  should be different for password.");
                 }
               },
             ),
@@ -103,39 +123,30 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
             ),
             RectangularInputField(
               sufixIcon: null,
-              controller: fakeController,
+              controller: confirmPasswordController,
               textInputType: TextInputType.text,
-              hintText: 'Fake Password',
+              hintText: 'Confirm Password',
               icon: const Icon(
                 Icons.lock,
-                color: Colors.black,
+                color: AppColors.logoColor,
               ),
               obscureText: true,
               onChanged: (val) {},
               validator: (value) {
                 if (value!.isEmpty) {
-                  return ("Fake Password  is required");
-                }else if(passwordController.text == fakeController.text){
-                  return ("Fake Password  should be different for password.");
+                  return ("Confirm Password  is required");
                 }
               },
             ),
-
-
-
-
           ],
         ),
       ),
-
-
       const SizedBox(
         height: Sizes.appPadding / 2,
       ),
       RectangularButton(
           text: 'Sign Up',
           press: () {
-
             UserModel userModel = UserModel()
               ..firstName = widget.userModel.firstName
               ..lastName = widget.userModel.lastName
@@ -143,33 +154,49 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
               ..fakePassword = fakeController.text
               ..birthDate = widget.userModel.birthDate
               ..gender = widget.userModel.gender
-              ..imageUrl =widget.userModel.imageUrl
+              ..imageUrl = widget.userModel.imageUrl
               ..userType = "User"
               ..geoLocation = {
                 'latitude': "",
                 'longitude': "",
               }
-            ..chattingWith = {
-              'chattingWith': "",
-              'lastMessage': "",
-              'dateLastMessage': DateTime.now(),
-            };
+              ..chattingWith = {
+                'chattingWith': "",
+                'lastMessage': "",
+                'dateLastMessage': DateTime.now(),
+              };
 
-
-            if (_formKey.currentState!.validate()) {
-
-
-              context.read<AuthProvider>().signUp(passwordController.text,userModel, context);
-
+            if (emailController.text.isEmpty) {
+              errorMessage('Email is required');
+            } else if (fakeController.text.isEmpty) {
+              errorMessage('Fake Password is required');
+            } else if (passwordController.text.isEmpty) {
+              errorMessage('Password is required');
+            } else if (passwordController.text == fakeController.text) {
+              errorMessage(
+                  "Fake Password  should be different for real password.");
+            } else if (passwordController.text !=
+                confirmPasswordController.text) {
+              errorMessage("Confirm password does not match to password.");
+            } else {
+              context
+                  .read<AuthProvider>()
+                  .signUp(passwordController.text, userModel, context);
             }
+
+            //
+            // if (_formKey.currentState!.validate()) {
+            //
+            //
+            //   context.read<AuthProvider>().signUp(passwordController.text,userModel, context);
+            //
+            // }
           }),
       const SizedBox(
         height: Sizes.dimen_40 / 2,
       ),
       const Social(),
     ];
-
-
 
     itemsCount = icon.length;
 
@@ -204,5 +231,3 @@ class _EmailPasswordTextFieldsState extends State<EmailPasswordTextFields> {
     );
   }
 }
-
-

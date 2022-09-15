@@ -19,9 +19,9 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-   return Center(
-     child: SizedBox(
-       height: size.height,
+   return SizedBox(
+     height: size.height,
+     child: SingleChildScrollView(
        child: Column(
 
          children: [
@@ -134,9 +134,8 @@ class ProfileScreen extends StatelessWidget {
              ),
            ),
            SizedBox(
-             height: 40,
+             height: Sizes.dimen_80,
            ),
-
 
            Wrap(
              spacing: 40,

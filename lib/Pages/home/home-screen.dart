@@ -64,9 +64,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
 
-  late AndroidNotificationChannel channel;
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
 
 
   @override
@@ -100,79 +97,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     super.initState();
 
     getLoggedInUser();
-    loadFCM();
-    listenFCM();
+
 
   }
 
 
 
 
-  Future<Uint8List> _getByteArrayFromUrl(String url) async {
-    final http.Response response = await http.get(Uri.parse(url));
-    return response.bodyBytes;
-  }
 
-  void listenFCM() async {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-
-      final ByteArrayAndroidBitmap largeIcon = ByteArrayAndroidBitmap(
-          await _getByteArrayFromUrl(userData!.imageUrl.toString()));
-      final ByteArrayAndroidBitmap bigPicture = ByteArrayAndroidBitmap(
-          await _getByteArrayFromUrl(userData!.imageUrl.toString()));
-
-      final BigPictureStyleInformation bigPictureStyleInformation =
-      BigPictureStyleInformation(bigPicture,
-          largeIcon: largeIcon,
-          contentTitle: notification?.title,
-          htmlFormatContentTitle: true,
-          summaryText: notification?.body,
-          htmlFormatSummaryText: true);
-
-      if (notification != null && android != null && !kIsWeb) {
-        flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              styleInformation: bigPictureStyleInformation,  // it will display the url image
-              icon: 'img',
-
-              //largeIcon: const DrawableResourceAndroidBitmap('ic_launcher'),
-            ),
-          ),
-        );
-      }
-    });
-  }
-
-  void loadFCM() async {
-    if (!kIsWeb) {
-      channel = const AndroidNotificationChannel(
-        'high_importance_channel', // id
-        'High Importance Notifications', // title
-        importance: Importance.high,
-        enableVibration: true,
-      );
-
-      flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-      await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
-
-      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    }
-  }
 
   @override
   void dispose() {
@@ -190,14 +122,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           return Scaffold(
 
             appBar: AppBar(
-                backgroundColor: Colors.transparent,
+
               title: Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
 
                   Image.asset('assets/images/logo.png',width: 50,height: 50,),
-                  Text('SUREKEEP',style: GoogleFonts.monoton(color: AppColors.logoColor,
-                    textStyle: const TextStyle( letterSpacing: 5,fontSize: 12,fontWeight: FontWeight.bold),
+                  Text('SURE KEEP',style: GoogleFonts.montserrat(color:Colors.white,
+                    textStyle: const TextStyle( letterSpacing: 5,fontSize: 10,fontWeight: FontWeight.bold),
                   ),),
                   // Text(
                   //   _selectedIndex == 1
@@ -213,7 +145,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               ),
               automaticallyImplyLeading: false,
 
-              elevation: 0,
+              elevation: 1,
               // leading: Padding(
               //   padding: const EdgeInsets.all(12.0),
               //   child: ClipRRect(

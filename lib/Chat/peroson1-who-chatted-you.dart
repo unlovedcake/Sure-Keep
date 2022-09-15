@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/contact.dart';
@@ -26,6 +27,7 @@ class Person1WhoChattedYou extends StatefulWidget {
 
 class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
   List<Contact>? contacts;
+  User? user = FirebaseAuth.instance.currentUser;
 
   String _message = "You are invited";
   final telephony = Telephony.instance;
@@ -59,10 +61,13 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
   }
 
   List<dynamic> numberAccept = [];
+  List<dynamic> numberAccept1 = [];
 
   getUserAccept() async {
     final QuerySnapshot result = await FirebaseFirestore.instance
         .collection('table-accept-request')
+        .where('isAccept', isEqualTo: true)
+        //.where('from', isEqualTo: user!.email)
         .get();
     final List<DocumentSnapshot> document = result.docs;
 
@@ -70,6 +75,7 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
 
     for (int i = 0; i < document.length; i++) {
       numberAccept.add(document[i]['Accept'][0]);
+      numberAccept1.add(document[i]['Accept1'][0]);
     }
 
     print(numberAccept);
@@ -324,7 +330,7 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                                           style: GoogleFonts.lato(
                                             textStyle: const TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.blue,
+                                                color: Colors.black,
                                                 letterSpacing: .5),
                                           ),
                                         ),
@@ -339,6 +345,7 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                                     child: OutlinedButton(
                                       onPressed: () async {
                                         if (numberAccept.contains(
+                                            number.replaceAll(" ", "")) ||  numberAccept1.contains(
                                             number.replaceAll(" ", ""))) {
                                           final QuerySnapshot result =
                                               await FirebaseFirestore.instance
@@ -364,11 +371,13 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                                         }
                                       },
                                       child: numberAccept.contains(
-                                              number.replaceAll(" ", ""))
+                                              number.replaceAll(" ", "")) ||  numberAccept1.contains(
+                                          number.replaceAll(" ", ""))
                                           ? Text('Send Message',
                                               style: GoogleFonts.lato(
                                                 textStyle: const TextStyle(
-                                                    color: Colors.black,
+                                                  fontSize: 12,
+                                                    color: Colors.green,
                                                     letterSpacing: .5),
                                               ))
                                           : Text('Pending Request',
@@ -379,7 +388,8 @@ class _Person1WhoChattedYouState extends State<Person1WhoChattedYou> {
                                               )),
                                     ),
                                   )
-                                : SizedBox.shrink()
+                                : SizedBox.shrink(),
+
 
                             // OutlinedButton(onPressed: (){
                             //   if(!phoneNumber.contains(number)){

@@ -69,7 +69,8 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
 
     return Scaffold(
       appBar: AppBar(
-
+        centerTitle: true,
+        title: Text('OTP Verification'),
       ),
       backgroundColor: Color(0xfff7f6fb),
       body: SingleChildScrollView(
@@ -89,7 +90,7 @@ class _OTPVerificationCodeState extends State<OTPVerificationCode> {
                   shape: BoxShape.circle,
                 ),
                 child: Image.asset(
-                  'assets/images/otp-image.png',color: AppColors.logoColor,
+                  'assets/images/otp-image.png',
                 ),
               ),
               const SizedBox(

@@ -406,8 +406,8 @@ class _SearchUserState extends State<SearchUser> {
                                 ),
                                 Text('   ${ user.get('firstName',)}'
                                  ,
-                                    style: GoogleFonts.assistant(
-                                    textStyle: const TextStyle(color: AppColors.logoColor, letterSpacing: 1,fontSize: 16,fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.lato(
+                                    textStyle: const TextStyle(letterSpacing: 1,fontSize: 12,fontWeight: FontWeight.bold),
                         ),
                                   textAlign: TextAlign.center,
                                 )

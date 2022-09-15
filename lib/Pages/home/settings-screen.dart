@@ -151,7 +151,7 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
 
   Future<int> getDuration() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? duration = prefs.getInt('duration') ?? 30;
+    int? duration = prefs.getInt('duration') ?? 0;
     return  duration;
 }
 

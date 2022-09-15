@@ -17,12 +17,18 @@ class HeaderSignUp extends StatelessWidget {
         vertical: Sizes.appPadding / 2,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
         children: [
           //SizedBox(height: size.height * 0.15),
 
-          AspectRatio(aspectRatio: 6 / 3,
+          SizedBox(
+              width: size.width *.5,
+              height: size.height *.2,
               child: Image.asset('assets/images/logo.png')),
+
+          Text('To help us with personal experience, \n'
+              'pleas tell us a little about yourself.',style: TextStyle(fontSize: 14,color: Colors.grey[600]),),
+
           // Text('Welcome',style: TextStyle(
           //   fontSize: 24,
           //   fontWeight: FontWeight.w600,

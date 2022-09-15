@@ -43,6 +43,77 @@ class _ChatConversationState extends State<ChatConversation> {
 
   bool? _isForeGround;
 
+  late AndroidNotificationChannel channel;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+
+  Future<Uint8List> _getByteArrayFromUrl(String url) async {
+    final http.Response response = await http.get(Uri.parse(url));
+    return response.bodyBytes;
+  }
+
+  // void listenFCM() async {
+  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+  //     RemoteNotification? notification = message.notification;
+  //     AndroidNotification? android = message.notification?.android;
+  //     //
+  //     // final ByteArrayAndroidBitmap largeIcon = ByteArrayAndroidBitmap(
+  //     //     await _getByteArrayFromUrl(userData!.imageUrl.toString()));
+  //     // final ByteArrayAndroidBitmap bigPicture = ByteArrayAndroidBitmap(
+  //     //     await _getByteArrayFromUrl(userData!.imageUrl.toString()));
+  //     //
+  //     // final BigPictureStyleInformation bigPictureStyleInformation =
+  //     // BigPictureStyleInformation(bigPicture,
+  //     //     largeIcon: largeIcon,
+  //     //     contentTitle: notification?.title,
+  //     //     htmlFormatContentTitle: true,
+  //     //     summaryText: notification?.body,
+  //     //     htmlFormatSummaryText: true);
+  //
+  //     if (notification != null && android != null && !kIsWeb) {
+  //       flutterLocalNotificationsPlugin.show(
+  //         notification.hashCode,
+  //         notification.title,
+  //         notification.body,
+  //         NotificationDetails(
+  //           android: AndroidNotificationDetails(
+  //             channel.id,
+  //             channel.name,
+  //             //styleInformation: bigPictureStyleInformation,  // it will display the url image
+  //             icon: 'img',
+  //
+  //             //largeIcon: const DrawableResourceAndroidBitmap('ic_launcher'),
+  //           ),
+  //         ),
+  //       );
+  //     }
+  //   });
+  // }
+  //
+  // void loadFCM() async {
+  //   if (!kIsWeb) {
+  //     channel = const AndroidNotificationChannel(
+  //       'high_importance_channel', // id
+  //       'High Importance Notifications', // title
+  //       importance: Importance.high,
+  //       enableVibration: true,
+  //     );
+  //
+  //     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  //
+  //     await flutterLocalNotificationsPlugin
+  //         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+  //         ?.createNotificationChannel(channel);
+  //
+  //     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+  //       alert: true,
+  //       badge: true,
+  //       sound: true,
+  //     );
+  //   }
+  // }
+
 
   Future<bool?> isForeGround() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -96,25 +167,76 @@ class _ChatConversationState extends State<ChatConversation> {
     } catch (e) {
       print("error push notification");
     }
+    loadSend();
   }
 
+
+
+
+  // void loadSend() async {
+  //
+  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+  //     RemoteNotification? notification = message.notification;
+  //     AndroidNotification? android = message.notification?.android;
+  //
+  //
+  //
+  //     bool isallowed = await AwesomeNotifications().isNotificationAllowed();
+  //     if (!isallowed) {
+  //       //no permission of local notification
+  //       AwesomeNotifications().requestPermissionToSendNotifications();
+  //     } else {
+  //       if (notification != null && android != null && !kIsWeb) {
+  //
+  //
+  //         //show notification
+  //         AwesomeNotifications().createNotification(
+  //             content: NotificationContent( //simgple notification
+  //               id: 123,
+  //               channelKey: 'basic',
+  //               //set configuration wuth key "basic"
+  //               title: notification.title,
+  //               body: notification.body,
+  //               payload: {"name": "FlutterCampus"},
+  //               autoDismissible: false,
+  //               bigPicture: widget.user.imageUrl,
+  //               roundedBigPicture: true
+  //
+  //             ),
+  //
+  //             actionButtons: [
+  //               NotificationActionButton(
+  //                 key: "open",
+  //                 label: "Open File",
+  //               ),
+  //
+  //               NotificationActionButton(
+  //                 key: "delete",
+  //                 label: "Delete File",
+  //               )
+  //             ]
+  //         );
+  //       }
+  //     }
+  //
+  //   });
+  //
+  //
+  // }
+
   void loadFCM() async {
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
   }
 
-
-
   void loadSend() async {
-
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
-
-
 
       bool isallowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isallowed) {
@@ -122,41 +244,33 @@ class _ChatConversationState extends State<ChatConversation> {
         AwesomeNotifications().requestPermissionToSendNotifications();
       } else {
         if (notification != null && android != null && !kIsWeb) {
-
-
           //show notification
           AwesomeNotifications().createNotification(
-              content: NotificationContent( //simgple notification
-                id: 123,
-                channelKey: 'basic',
-                //set configuration wuth key "basic"
-                title: notification.title,
-                body: notification.body,
-                payload: {"name": "FlutterCampus"},
-                autoDismissible: false,
-                bigPicture: widget.user.imageUrl,
-                roundedBigPicture: true
-
-              ),
-
-              actionButtons: [
-                NotificationActionButton(
-                  key: "open",
-                  label: "Open File",
-                ),
-
-                NotificationActionButton(
-                  key: "delete",
-                  label: "Delete File",
-                )
-              ]
+              content: NotificationContent(
+                //simgple notification
+                  id: 123,
+                  channelKey: 'basic',
+                  //set configuration wuth key "basic"
+                  title: notification.title,
+                  body: notification.body,
+                  //payload: {"phoneNumber": phoneNumber, "id": id},
+                  autoDismissible: false,
+                  //bigPicture: widget.user.imageUrl,
+                  roundedBigPicture: true),
+              // actionButtons: [
+              //   NotificationActionButton(
+              //     key: "Accept",
+              //     label: "Accept",
+              //   ),
+              //   NotificationActionButton(
+              //     key: "Decline",
+              //     label: "Decline",
+              //   )
+              // ]
           );
         }
       }
-
     });
-
-
   }
 
   @override
@@ -164,8 +278,9 @@ class _ChatConversationState extends State<ChatConversation> {
     super.initState();
     isForeGround();
     read();
+    loadFCM();
+    //listenFCM();
 
-    //loadFCM();
   }
 
   void sendChatMessage(String content, int type, String groupChatId,
@@ -196,7 +311,7 @@ class _ChatConversationState extends State<ChatConversation> {
       FirebaseFirestore.instance.runTransaction((transaction) async {
         transaction.set(documentReference, conversation.toMap());
 
-        sendPushMessage(widget.user.token.toString(), widget.user.firstName.toString(),content);
+        sendPushMessage(widget.user.token.toString(), user!.displayName.toString(),content);
         //loadSend();
 
       }).whenComplete(() {

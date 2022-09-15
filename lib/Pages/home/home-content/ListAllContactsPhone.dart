@@ -20,6 +20,8 @@ import 'package:sure_keep/Router/navigate-route.dart';
 import 'package:telephony/telephony.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../All-Constants/color_constants.dart';
+
 onBackgroundMessage(SmsMessage message) {
   debugPrint("onBackgroundMessage called");
 }
@@ -44,6 +46,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
   List<String> phoneNumber = [];
   List<dynamic> numberAccept = [];
+  List<dynamic> numberAccept1 = [];
   List<String> isEqualTOphoneNumber = [];
 
   List listUsers = [];
@@ -86,6 +89,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
   getUserAccept() async {
     final QuerySnapshot result = await FirebaseFirestore.instance
         .collection('table-accept-request')
+        .where('isAccept', isEqualTo: true)
+        //.where('from', isEqualTo: user!.email)
         .get();
     final List<DocumentSnapshot> document = result.docs;
 
@@ -93,6 +98,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
     for (int i = 0; i < document.length; i++) {
       numberAccept.add(document[i]['Accept'][0]);
+      numberAccept1.add(document[i]['Accept1'][0]);
     }
 
     print(numberAccept);
@@ -177,7 +183,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     );
   }
 
-  void loadSend(String phoneNumber, String id) async {
+  void loadSend(String phoneNumber,String phoneNumber1, String id) async {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
@@ -197,9 +203,10 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                   //set configuration wuth key "basic"
                   title: notification.title,
                   body: notification.body,
-                  payload: {"phoneNumber": phoneNumber, "id": id},
+                  payload: {"phoneNumber": phoneNumber, "phoneNumber1": phoneNumber1, "id": id},
                   autoDismissible: false,
                   //bigPicture: widget.user.imageUrl,
+                  showWhen: true,
                   roundedBigPicture: true),
               actionButtons: [
                 NotificationActionButton(
@@ -344,7 +351,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                                     "  ${contacts![index].name.first} ${contacts![index].name.last}",
                                     style: GoogleFonts.lato(
                                       textStyle: const TextStyle(
-                                          color: Colors.blue,
+                                          color: AppColors.logoColor,
                                           fontSize: 14,
                                           letterSpacing: .5),
                                     ),
@@ -390,18 +397,22 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                                         await FirebaseFirestore.instance
                                             .collection('table-accept-request')
                                             .add({
+                                          "isAccept": false,
                                           "from": user!.email,
                                           "to": userModel.email,
-                                          // "Accept": FieldValue.arrayUnion(
-                                          //   [""],
-                                          // ),
+                                          "Accept": FieldValue.arrayUnion(
+                                            [userModel.phoneNumber.toString()],
+                                          ),
+                                          "Accept1": FieldValue.arrayUnion(
+                                            [userModels!.phoneNumber.toString()],
+                                          ),
                                         }).then((val) async {
                                           sendPushMessage(
                                               userModel!.token.toString(),
                                               user.displayName.toString(),
                                               "Send you a request");
                                           loadSend(
-                                              userModel.phoneNumber.toString(),val.id);
+                                              userModel.phoneNumber.toString(),userModels!.phoneNumber.toString(),val.id);
                                           // Future.delayed(Duration(seconds: 2)).then((value) async{
                                           //   await CircularProgressIndicator();
                                           //    Navigator.pop(context);
@@ -412,16 +423,19 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
                                     },
                                     child: numberAccept.contains(
-                                            number.replaceAll(" ", ""))
+                                            number.replaceAll(" ", "")) ||  numberAccept1.contains(
+                                        number.replaceAll(" ", ""))
                                         ? Text('Connected',
                                             style: GoogleFonts.lato(
                                               textStyle: const TextStyle(
+                                                fontSize: 12,
                                                   color: Colors.red,
                                                   letterSpacing: .5),
                                             ))
                                         : Text('Connect',
                                             style: GoogleFonts.lato(
                                               textStyle: const TextStyle(
+                                                  fontSize: 12,
                                                   color: Colors.red,
                                                   letterSpacing: .5),
                                             )),
@@ -438,7 +452,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
                                       'Invite',
                                       style: GoogleFonts.lato(
                                         textStyle: const TextStyle(
-                                            color: Colors.blue,
+                                            fontSize: 12,
+                                            color: Colors.black,
                                             letterSpacing: .5),
                                       ),
                                     )),

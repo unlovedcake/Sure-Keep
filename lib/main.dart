@@ -90,11 +90,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
 
     AwesomeNotifications().actionStream.listen((action) async {
+
+      String? phoneNumber = action.payload!["phoneNumber"];
+      String? phoneNumber1 = action.payload!["phoneNumber1"];
+      String? id = action.payload!["id"];
+
+
       if (action.buttonKeyPressed == "Accept") {
         print(action.payload);
-
-        String? phoneNumber = action.payload!["phoneNumber"];
-        String? id = action.payload!["id"];
 
 
 
@@ -102,17 +105,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             .collection('table-accept-request')
             .doc(id)
             .set({
-          "Accept": FieldValue.arrayUnion(
-            [phoneNumber],
-          ),
+          "isAccept": true,
+          // "Accept": FieldValue.arrayUnion(
+          //   [phoneNumber],
+          // ),
+          // "Accept1": FieldValue.arrayUnion(
+          //   [phoneNumber1],
+          // ),
         },SetOptions(merge: true)).whenComplete(() async {
           Fluttertoast.showToast(msg: "Request Accepted...");
         });
 
-        if (action.buttonKeyPressed == "Accept") {
-          print("Accept.");
-          print(id);
-        }
 
         //   final QuerySnapshot result = await FirebaseFirestore.instance
       //       .collection('table-accept-request')
@@ -133,7 +136,35 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       // } else {
       //   print(action.payload);
       //   print("OKEYKA"); //notification was pressed
-       }
+       }else if (action.buttonKeyPressed == "Decline") {
+        await FirebaseFirestore.instance
+            .collection('table-accept-request')
+            .doc(id)
+            .delete();
+        Fluttertoast.showToast(msg: "Request Declined...");
+      }else{
+
+        await FirebaseFirestore.instance
+            .collection('table-accept-request')
+            .doc(id)
+            .set({
+          "isAccept": true,
+          // "Accept": FieldValue.arrayUnion(
+          //   [phoneNumber],
+          // ),
+          //
+          // "Accept1": FieldValue.arrayUnion(
+          //   [phoneNumber1],
+          // ),
+        },SetOptions(merge: true)).whenComplete(() async {
+          Fluttertoast.showToast(msg: "Request Accepted...");
+        });
+        // await FirebaseFirestore.instance
+        //     .collection('table-accept-request')
+        //     .doc(id)
+        //     .delete();
+        // Fluttertoast.showToast(msg: "Request Declined...");
+      }
     });
   }
 
@@ -177,7 +208,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: <Color>[Colors.white, AppColors.logoColor]),
-          loadingIndicator: const RefreshProgressIndicator(),
+          //loadingIndicator: const RefreshProgressIndicator(),
           logo: SizedBox(
             height: 150,
             width: 150,
