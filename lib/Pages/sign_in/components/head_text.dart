@@ -20,7 +20,7 @@ class HeadText extends StatelessWidget {
            Text('SUREKEEP',style: GoogleFonts.monoton(
             textStyle: const TextStyle(color: AppColors.logoColor, letterSpacing: 5,fontSize: 30,fontWeight: FontWeight.bold),
           ),),
-          AspectRatio(aspectRatio: 3 / 4,
+          AspectRatio(aspectRatio: 3 / 3,
           child: Image.asset('assets/images/logo.png')),
         ],
       ),

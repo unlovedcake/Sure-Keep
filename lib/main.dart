@@ -37,6 +37,18 @@ Future<void> main() async {
       importance: NotificationImportance.High,
       enableVibration: true,
     ),
+
+    NotificationChannel(
+
+      channelGroupKey: 'send_request',
+      channelKey: 'send request',
+      channelName: 'Send Request',
+      channelDescription: 'Notification channel for send request',
+      channelShowBadge: true,
+      importance: NotificationImportance.High,
+      enableVibration: true,
+    ),
+
   ]);
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -103,16 +115,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
         await FirebaseFirestore.instance
             .collection('table-accept-request')
-            .doc(id)
-            .set({
+
+            .add({
           "isAccept": true,
-          // "Accept": FieldValue.arrayUnion(
-          //   [phoneNumber],
-          // ),
-          // "Accept1": FieldValue.arrayUnion(
-          //   [phoneNumber1],
-          // ),
-        },SetOptions(merge: true)).whenComplete(() async {
+          "Accept": FieldValue.arrayUnion(
+            [phoneNumber],
+          ),
+          "Accept1": FieldValue.arrayUnion(
+            [phoneNumber1],
+          ),
+        }).whenComplete(() async {
           Fluttertoast.showToast(msg: "Request Accepted...");
         });
 
@@ -137,26 +149,25 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       //   print(action.payload);
       //   print("OKEYKA"); //notification was pressed
        }else if (action.buttonKeyPressed == "Decline") {
-        await FirebaseFirestore.instance
-            .collection('table-accept-request')
-            .doc(id)
-            .delete();
+        // await FirebaseFirestore.instance
+        //     .collection('table-accept-request')
+        //     .doc(id)
+        //     .delete();
         Fluttertoast.showToast(msg: "Request Declined...");
       }else{
 
         await FirebaseFirestore.instance
             .collection('table-accept-request')
-            .doc(id)
-            .set({
+
+            .add({
           "isAccept": true,
-          // "Accept": FieldValue.arrayUnion(
-          //   [phoneNumber],
-          // ),
-          //
-          // "Accept1": FieldValue.arrayUnion(
-          //   [phoneNumber1],
-          // ),
-        },SetOptions(merge: true)).whenComplete(() async {
+          "Accept": FieldValue.arrayUnion(
+            [phoneNumber],
+          ),
+          "Accept1": FieldValue.arrayUnion(
+            [phoneNumber1],
+          ),
+        }).whenComplete(() async {
           Fluttertoast.showToast(msg: "Request Accepted...");
         });
         // await FirebaseFirestore.instance
@@ -192,12 +203,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
 
-    super.dispose();
-  }
+
+
 
   @override
   Widget build(BuildContext context) {

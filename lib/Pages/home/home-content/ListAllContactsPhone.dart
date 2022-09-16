@@ -147,7 +147,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     if (!mounted) return;
   }
 
-  void sendPushMessage(String token, String title, String body) async {
+ void sendPushMessage(String token, String? title, String? body, String phone1,String phone2) async {
+
     try {
       await http.post(
         Uri.parse('https://fcm.googleapis.com/fcm/send'),
@@ -158,7 +159,7 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
         },
         body: jsonEncode(
           <String, dynamic>{
-            'notification': <String, dynamic>{'body': body, 'title': title},
+            'notification': <String, dynamic>{'body': body ?? "", 'title': title ?? ""},
             'priority': 'high',
             'data': <String, dynamic>{
               'click_action': 'FLUTTER_NOTIFICATION_CLICK',
@@ -169,9 +170,14 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
           },
         ),
       );
+      await  sendNotification(phone1,phone2);
+        Fluttertoast.showToast(
+            msg: "Request sent...");
     } catch (e) {
       print("error push notification");
     }
+
+
   }
 
   void loadFCM() async {
@@ -181,9 +187,11 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
       badge: true,
       sound: true,
     );
+
+
   }
 
-  void loadSend(String phoneNumber,String phoneNumber1, String id) async {
+  Future<void> sendNotification(String phoneNumber,String phoneNumber1) async {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
@@ -195,15 +203,15 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
       } else {
         if (notification != null && android != null && !kIsWeb) {
           //show notification
-          AwesomeNotifications().createNotification(
+          await AwesomeNotifications().createNotification(
               content: NotificationContent(
-                  //simgple notification
-                  id: 123,
-                  channelKey: 'basic',
-                  //set configuration wuth key "basic"
+
+                  id: DateTime.now().millisecondsSinceEpoch.remainder(3),
+                  channelKey: 'send request',
+
                   title: notification.title,
                   body: notification.body,
-                  payload: {"phoneNumber": phoneNumber, "phoneNumber1": phoneNumber1, "id": id},
+                  payload: {"phoneNumber": phoneNumber, "phoneNumber1": phoneNumber1},
                   autoDismissible: false,
                   //bigPicture: widget.user.imageUrl,
                   showWhen: true,
@@ -223,6 +231,16 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
     });
   }
 
+  @override
+  void dispose() {
+
+   // AwesomeNotifications().actionSink.close();
+   //  AwesomeNotifications().createdSink.close();
+
+    super.dispose();
+  }
+
+
   Future<bool?> isAccepts(
 
 
@@ -233,6 +251,8 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
     return _isAccept;
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -391,34 +411,44 @@ class _ListAllContactPhoneState extends State<ListAllContactPhone> {
 
                                       //NavigateRoute.gotoPage(context, ChatConversation(user: userModel));
 
-                                      if( !numberAccept.contains(
-                                          number.replaceAll(" ", ""))){
+                                      if (!numberAccept.contains(
+                                          number.replaceAll(" ", "")) &&  !numberAccept1.contains(
+                                          number.replaceAll(" ", ""))) {
 
-                                        await FirebaseFirestore.instance
-                                            .collection('table-accept-request')
-                                            .add({
-                                          "isAccept": false,
-                                          "from": user!.email,
-                                          "to": userModel.email,
-                                          "Accept": FieldValue.arrayUnion(
-                                            [userModel.phoneNumber.toString()],
-                                          ),
-                                          "Accept1": FieldValue.arrayUnion(
-                                            [userModels!.phoneNumber.toString()],
-                                          ),
-                                        }).then((val) async {
-                                          sendPushMessage(
-                                              userModel!.token.toString(),
-                                              user.displayName.toString(),
-                                              "Send you a request");
-                                          loadSend(
-                                              userModel.phoneNumber.toString(),userModels!.phoneNumber.toString(),val.id);
-                                          // Future.delayed(Duration(seconds: 2)).then((value) async{
-                                          //   await CircularProgressIndicator();
-                                          //    Navigator.pop(context);
-                                          Fluttertoast.showToast(
-                                              msg: "Request sent...");
-                                        });
+                                        sendPushMessage(
+                                          userModel.token.toString(),
+                                          user!.displayName.toString(),
+                                          "Send you a request",
+                                          userModel.phoneNumber.toString(),
+                                          userModels!.phoneNumber.toString(),
+
+                                        );
+
+                                        // await FirebaseFirestore.instance
+                                        //     .collection('table-accept-request')
+                                        //     .add({
+                                        //   "isAccept": false,
+                                        //   "from": user!.email,
+                                        //   "to": userModel.email,
+                                        //
+                                        // }).then((val) async {
+                                        //   sendPushMessage(
+                                        //       userModel!.token.toString(),
+                                        //       user.displayName.toString(),
+                                        //       "Send you a request",
+                                        //       userModel.phoneNumber.toString(),
+                                        //       userModels!.phoneNumber.toString(),
+                                        //       val.id,
+                                        //       );
+                                        //
+                                        //   // Future.delayed(Duration(seconds: 2)).then((value) async{
+                                        //   //   await CircularProgressIndicator();
+                                        //   //    Navigator.pop(context);
+                                        //   Fluttertoast.showToast(
+                                        //       msg: "Request sent...");
+                                        // });
+
+                                        print("Send Request");
                                       }
 
                                     },

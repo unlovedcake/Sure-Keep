@@ -9,19 +9,17 @@ class PhoneAuthScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              SizedBox(height: size.height * 0.2),
-              Container(
-                height: size.height,
-                child: Credentials(),
-              ),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: size.height * 0.2),
+            Container(
+              height: size.height,
+              child: Credentials(),
+            ),
+          ],
         ),
       ),
     );

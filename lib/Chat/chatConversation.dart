@@ -157,7 +157,7 @@ class _ChatConversationState extends State<ChatConversation> {
             'priority': 'high',
             'data': <String, dynamic>{
               'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-              'id': '1',
+              'id': '143',
               'status': 'done'
             },
             "to": token,
@@ -167,7 +167,7 @@ class _ChatConversationState extends State<ChatConversation> {
     } catch (e) {
       print("error push notification");
     }
-    loadSend();
+
   }
 
 
@@ -233,7 +233,7 @@ class _ChatConversationState extends State<ChatConversation> {
     );
   }
 
-  void loadSend() async {
+  loadSend() async {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
@@ -248,13 +248,14 @@ class _ChatConversationState extends State<ChatConversation> {
           AwesomeNotifications().createNotification(
               content: NotificationContent(
                 //simgple notification
-                  id: 123,
+                  id: DateTime.now().millisecondsSinceEpoch.remainder(3),
                   channelKey: 'basic',
                   //set configuration wuth key "basic"
                   title: notification.title,
                   body: notification.body,
                   //payload: {"phoneNumber": phoneNumber, "id": id},
                   autoDismissible: false,
+                  showWhen: false,
                   //bigPicture: widget.user.imageUrl,
                   roundedBigPicture: true),
               // actionButtons: [
@@ -312,9 +313,11 @@ class _ChatConversationState extends State<ChatConversation> {
         transaction.set(documentReference, conversation.toMap());
 
         sendPushMessage(widget.user.token.toString(), user!.displayName.toString(),content);
-        //loadSend();
 
-      }).whenComplete(() {
+        await loadSend();
+
+
+      }).whenComplete(() async{
         if (currentUserId == widget.user.docID.toString()) {
           return;
         }
@@ -329,10 +332,24 @@ class _ChatConversationState extends State<ChatConversation> {
             }
           },
         );
+
+
       });
     }
 
+    messageController.text ="";
+
   }
+
+
+  // @override
+  // void dispose() {
+  //
+  //   AwesomeNotifications().actionSink.close();
+  //   AwesomeNotifications().createdSink.close();
+  //
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {

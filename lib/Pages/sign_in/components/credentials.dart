@@ -14,6 +14,6 @@ class Credentials extends StatelessWidget {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-    return Container(height:size.height,child: const AnimateSignInFields());
+    return Container(height: size.height, child: const AnimateSignInFields());
   }
 }
